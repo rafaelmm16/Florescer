@@ -1,22 +1,16 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Habit } from '../types/habit';
 
-const HABITS_KEY = '@habits';
+const STORAGE_KEY = 'habits_data';
 
-export const saveHabits = async (habits: Habit[]) => {
-  try {
-    await AsyncStorage.setItem(HABITS_KEY, JSON.stringify(habits));
-  } catch (error) {
-    console.error('Erro ao salvar:', error);
+export async function loadHabits(): Promise<{ habits: Habit[]; trash: Habit[] }> {
+  const data = await AsyncStorage.getItem(STORAGE_KEY);
+  if (data) {
+    return JSON.parse(data);
   }
-};
+  return { habits: [], trash: [] };
+}
 
-export const loadHabits = async (): Promise<Habit[]> => {
-  try {
-    const json = await AsyncStorage.getItem(HABITS_KEY);
-    return json ? JSON.parse(json) : [];
-  } catch (error) {
-    console.error('Erro ao carregar:', error);
-    return [];
-  }
-};
+export async function saveHabits(data: { habits: Habit[]; trash: Habit[] }) {
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
