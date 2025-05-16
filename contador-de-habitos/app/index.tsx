@@ -1,5 +1,5 @@
-import { View, FlatList, StyleSheet, SafeAreaView, Text, Alert } from 'react-native';
-import { useEffect, useState, useCallback } from 'react';
+import { View, FlatList, StyleSheet, SafeAreaView, Text } from 'react-native';
+import { useState, useCallback } from 'react';
 import HabitItem from '../components/HabitItem';
 import { loadHabits, saveHabits } from '../utils/storage';
 import { Habit } from '../types/habit';
@@ -21,26 +21,24 @@ export default function HomeScreen() {
     }, [])
   );
 
-  useEffect(() => {
-    saveHabits({ habits, trash });
-  }, [habits, trash]);
-
   const toggleHabit = (id: string) => {
-    setHabits((prev) =>
-      prev.map((h) => (h.id === id ? { ...h, done: !h.done } : h))
+    const updatedHabits = habits.map((h) =>
+      h.id === id ? { ...h, done: !h.done } : h
     );
+    setHabits(updatedHabits);
+    saveHabits({ habits: updatedHabits, trash });
   };
 
   const deleteHabit = (id: string) => {
     const habitToDelete = habits.find(h => h.id === id);
     if (!habitToDelete) return;
     if (window.confirm(`Deseja mover "${habitToDelete.name}" para a lixeira?`)) {
-    const updatedHabits = habits.filter(h => h.id !== id);
-    const updatedTrash = [habitToDelete, ...trash];
-    setHabits(updatedHabits);
-    setTrash(updatedTrash);
-    saveHabits({ habits: updatedHabits, trash: updatedTrash });
-  }
+      const updatedHabits = habits.filter(h => h.id !== id);
+      const updatedTrash = [habitToDelete, ...trash];
+      setHabits(updatedHabits);
+      setTrash(updatedTrash);
+      saveHabits({ habits: updatedHabits, trash: updatedTrash });
+    }
   };
 
   return (

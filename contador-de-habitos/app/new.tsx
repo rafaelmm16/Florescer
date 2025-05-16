@@ -18,12 +18,14 @@ export default function NewHabitScreen() {
   }, []);
 
   const handleSubmit = (newHabit: Habit) => {
-    const updated = [...habits, newHabit];
-    setHabits(updated);
-    // Carrega a lixeira atual para não sobrescrever
     loadHabits().then(data => {
+      const updated = [...(data?.habits || []), newHabit];
       saveHabits({ habits: updated, trash: data?.trash || [] });
-      router.back();
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/');
+      }
     });
   };
 
