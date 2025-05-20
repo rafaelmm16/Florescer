@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, FlatList, Text, StyleSheet, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
+import { View, FlatList, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal } from 'react-native';
 import { loadHabits, saveHabits } from '../utils/storage';
 import { Habit } from '../types/habit';
 import Header from '../components/Header';
@@ -9,6 +9,8 @@ import { useRouter } from 'expo-router';
 export default function TrashScreen() {
   const [trash, setTrash] = useState<Habit[]>([]);
   const [habits, setHabits] = useState<Habit[]>([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -21,27 +23,25 @@ export default function TrashScreen() {
   const restoreHabit = (id: string) => {
     const habitToRestore = trash.find(h => h.id === id);
     if (!habitToRestore) return;
-    setTrash(prev => prev.filter(h => h.id !== id));
-    setHabits(prev => [habitToRestore, ...prev]);
-    saveHabits({ habits: [habitToRestore, ...habits], trash: trash.filter(h => h.id !== id) });
+    const updatedTrash = trash.filter(h => h.id !== id);
+    const updatedHabits = [habitToRestore, ...habits];
+    setTrash(updatedTrash);
+    setHabits(updatedHabits);
+    saveHabits({ habits: updatedHabits, trash: updatedTrash });
   };
 
-  const deleteForever = (id: string) => {
-    Alert.alert(
-      'Excluir permanentemente',
-      'Deseja excluir este hábito para sempre?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Excluir',
-          style: 'destructive',
-          onPress: () => {
-            setTrash(prev => prev.filter(h => h.id !== id));
-            saveHabits({ habits, trash: trash.filter(h => h.id !== id) });
-          }
-        }
-      ]
-    );
+  const confirmDelete = (habit: Habit) => {
+    setSelectedHabit(habit);
+    setModalVisible(true);
+  };
+
+  const deleteForever = () => {
+    if (!selectedHabit) return;
+    const updatedTrash = trash.filter(h => h.id !== selectedHabit.id);
+    setTrash(updatedTrash);
+    saveHabits({ habits, trash: updatedTrash });
+    setModalVisible(false);
+    setSelectedHabit(null);
   };
 
   return (
@@ -65,7 +65,7 @@ export default function TrashScreen() {
                 <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Restaurar</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => deleteForever(item.id)}
+                onPress={() => confirmDelete(item)}
                 style={styles.deleteButton}
               >
                 <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Excluir</Text>
@@ -74,6 +74,37 @@ export default function TrashScreen() {
           </View>
         )}
       />
+
+      {/* Modal customizado */}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Excluir permanentemente?</Text>
+            <Text style={styles.modalMessage}>
+              Tem certeza que deseja excluir "{selectedHabit?.name}" para sempre?
+            </Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancel}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={{ color: colors.primary, fontWeight: 'bold' }}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalDelete}
+                onPress={deleteForever}
+              >
+                <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Excluir</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -122,5 +153,53 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginTop: 40,
     textAlign: 'center',
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 24,
+    width: '80%',
+    alignItems: 'center',
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.danger,
+    marginBottom: 8,
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: colors.text,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  modalCancel: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 10,
+    marginRight: 8,
+    borderRadius: 6,
+    backgroundColor: '#F0F0F0',
+  },
+  modalDelete: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 10,
+    marginLeft: 8,
+    borderRadius: 6,
+    backgroundColor: colors.danger,
   },
 });
