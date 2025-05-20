@@ -7,12 +7,15 @@ import { Link, useFocusEffect } from 'expo-router';
 import colors from '../constants/colors';
 import Header from '../components/Header';
 import { TouchableOpacity } from 'react-native';
+import { useTheme } from '../components/ThemeContext';
 
 export default function HomeScreen() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [trash, setTrash] = useState<Habit[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
+
+  const { theme } = useTheme();
 
   useFocusEffect(
     useCallback(() => {
@@ -47,68 +50,72 @@ export default function HomeScreen() {
     setSelectedHabit(null);
   };
 
+  const isDark = theme === 'dark';
+
   return (
     <SafeAreaView style={styles.container}>
-      <Header
-        title="Meus Hábitos"
-        right={
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Link href="/trash" asChild>
-              <TouchableOpacity style={styles.trashButton}>
-                <Text style={styles.trashButtonText}>Lixeira</Text>
-              </TouchableOpacity>
-            </Link>
-            <Link href="/new" asChild>
-              <TouchableOpacity style={styles.button}>
-                <Text style={styles.buttonText}>+ Novo Hábito</Text>
-              </TouchableOpacity>
-            </Link>
-          </View>
-        }
-      />
-      <FlatList
-        data={habits}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <HabitItem habit={item} onToggle={toggleHabit} onDelete={() => askDeleteHabit(item)} />
-        )}
-        contentContainerStyle={habits.length === 0 && styles.emptyList}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>Nenhum hábito cadastrado ainda.</Text>
-        }
-        showsVerticalScrollIndicator={false}
-      />
+      <View style={{ backgroundColor: isDark ? '#181825' : '#fff', flex: 1 }}>
+        <Header
+          title="Meus Hábitos"
+          right={
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Link href="/trash" asChild>
+                <TouchableOpacity style={styles.trashButton}>
+                  <Text style={styles.trashButtonText}>Lixeira</Text>
+                </TouchableOpacity>
+              </Link>
+              <Link href="/new" asChild>
+                <TouchableOpacity style={styles.button}>
+                  <Text style={styles.buttonText}>+ Novo Hábito</Text>
+                </TouchableOpacity>
+              </Link>
+            </View>
+          }
+        />
+        <FlatList
+          data={habits}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <HabitItem habit={item} onToggle={toggleHabit} onDelete={() => askDeleteHabit(item)} />
+          )}
+          contentContainerStyle={habits.length === 0 && styles.emptyList}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>Nenhum hábito cadastrado ainda.</Text>
+          }
+          showsVerticalScrollIndicator={false}
+        />
 
-      {/* Modal customizado */}
-      <Modal
-        visible={modalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Mover para a lixeira?</Text>
-            <Text style={styles.modalMessage}>
-              Tem certeza que deseja mover "{selectedHabit?.name}" para a lixeira?
-            </Text>
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.modalCancel}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text style={{ color: colors.primary, fontWeight: 'bold' }}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalDelete}
-                onPress={confirmDeleteHabit}
-              >
-                <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Mover</Text>
-              </TouchableOpacity>
+        {/* Modal customizado */}
+        <Modal
+          visible={modalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Mover para a lixeira?</Text>
+              <Text style={styles.modalMessage}>
+                Tem certeza que deseja mover "{selectedHabit?.name}" para a lixeira?
+              </Text>
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={styles.modalCancel}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text style={{ color: colors.primary, fontWeight: 'bold' }}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.modalDelete}
+                  onPress={confirmDeleteHabit}
+                >
+                  <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Mover</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+      </View>
     </SafeAreaView>
   );
 }

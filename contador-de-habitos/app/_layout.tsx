@@ -1,15 +1,18 @@
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import { ThemeProvider } from '../components/ThemeContext';
 import Navbar from '../components/Navbar';
 import { View } from 'react-native';
 
 export default function RootLayout() {
-  return (
-    <ThemeProvider>
-      <View style={{ flex: 1 }}>
-        <Stack screenOptions={{ headerShown: false }} />
-        <Navbar />
-      </View>
-    </ThemeProvider>
-  );
+    const pathname = usePathname();
+
+    return (
+        <ThemeProvider>
+            <View style={{ flex: 1 }}>
+                <Stack screenOptions={{ headerShown: false }} />
+                {/* Só mostra a Navbar se não estiver na tela de login */}
+                {pathname !== '/login' && <Navbar />}
+            </View>
+        </ThemeProvider>
+    );
 }
