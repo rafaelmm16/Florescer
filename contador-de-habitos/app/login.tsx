@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { View, TextInput, TouchableOpacity, Text, StyleSheet, SafeAreaView, Platform } from 'react-native';
 import colors from '../constants/colors';
 import { useRouter } from 'expo-router';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
@@ -78,11 +78,8 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         width: 340,
         elevation: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.12,
-        shadowRadius: 8,
         alignItems: 'center',
+        boxShadow: Platform.OS === 'web' ? '0 4px 16px rgba(0,0,0,0.12)' : undefined,
     },
     title: {
         fontSize: 28,
