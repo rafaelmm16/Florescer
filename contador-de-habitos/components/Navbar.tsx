@@ -19,6 +19,16 @@ export default function Navbar() {
           <Text style={[styles.navText, pathname === '/' && styles.active]}>Início</Text>
         </TouchableOpacity>
       </Link>
+      <Link href="/trash" asChild>
+        <TouchableOpacity style={styles.navItem}>
+          <Ionicons
+            name={pathname === '/trash' ? 'trash' : 'trash-outline'}
+            size={24}
+            color={pathname === '/trash' ? colors.primary : colors.text}
+          />
+          <Text style={[styles.navText, pathname === '/trash' && styles.active]}>Lixeira</Text>
+        </TouchableOpacity>
+      </Link>
       <Link href="/profile" asChild>
         <TouchableOpacity style={styles.navItem}>
           <Ionicons

@@ -8,6 +8,7 @@ import colors from '../constants/colors';
 import Header from '../components/Header';
 import { TouchableOpacity } from 'react-native';
 import { useTheme } from '../components/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function HomeScreen() {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -55,23 +56,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={{ backgroundColor: isDark ? '#181825' : '#fff', flex: 1 }}>
-        <Header
-          title="Meus Hábitos"
-          right={
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Link href="/trash" asChild>
-                <TouchableOpacity style={styles.trashButton}>
-                  <Text style={styles.trashButtonText}>Lixeira</Text>
-                </TouchableOpacity>
-              </Link>
-              <Link href="/new" asChild>
-                <TouchableOpacity style={styles.button}>
-                  <Text style={styles.buttonText}>+ Novo Hábito</Text>
-                </TouchableOpacity>
-              </Link>
-            </View>
-          }
-        />
+        <Header title="Meus Hábitos" />
         <FlatList
           data={habits}
           keyExtractor={(item) => item.id}
@@ -115,6 +100,13 @@ export default function HomeScreen() {
             </View>
           </View>
         </Modal>
+
+        {/* Botão flutuante */}
+        <Link href="/new" asChild>
+          <TouchableOpacity style={styles.fab}>
+            <Ionicons name="add" size={36} color="#fff" />
+          </TouchableOpacity>
+        </Link>
       </View>
     </SafeAreaView>
   );
@@ -211,5 +203,17 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     borderRadius: 6,
     backgroundColor: colors.danger,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 76, // aumenta para ficar acima da navbar (ajuste conforme altura da navbar)
+    right: 16,
+    backgroundColor: colors.primary,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
   },
 });

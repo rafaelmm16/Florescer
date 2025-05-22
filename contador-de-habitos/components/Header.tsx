@@ -15,13 +15,15 @@ export default function Header({ title, showBack = false, onBack, right }: Heade
     <View style={styles.headerWrapper}>
       {showBack ? (
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={26} color={colors.primary} />
+          <Ionicons name="arrow-back" size={28} color={colors.primary} />
         </TouchableOpacity>
       ) : (
-        <View style={{ width: 38 }} />
+        <View style={{ width: 40 }} />
       )}
       <Text style={styles.headerTitle} numberOfLines={1}>{title}</Text>
-      <View style={{ minWidth: 38, alignItems: 'flex-end' }}>{right}</View>
+      <View style={{ width: 40, alignItems: 'flex-end', justifyContent: 'center' }}>
+        {right}
+      </View>
     </View>
   );
 }
@@ -31,30 +33,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(35, 33, 54, 0.92)', // translúcido
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) + 8 : 28,
-    paddingBottom: 14,
-    borderBottomWidth: 0,
-    borderRadius: 18,
-    margin: 10,
-    marginBottom: 0,
-    elevation: 6,
+    backgroundColor: 'rgba(35, 33, 54, 0.98)',
+    paddingHorizontal: 18,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) + 12 : 36,
+    paddingBottom: 18,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    width: '100%',
+    minHeight: 70,
+    elevation: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    position: 'relative',
   },
   headerTitle: {
     flex: 1,
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '900',
     color: '#fff',
     textAlign: 'center',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
+    fontFamily: Platform.OS === 'ios' ? 'AvenirNext-Heavy' : 'sans-serif-condensed',
+    textShadowColor: 'rgba(0,0,0,0.18)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   backButton: {
     padding: 8,
     marginRight: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
