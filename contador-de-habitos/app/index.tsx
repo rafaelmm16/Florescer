@@ -132,11 +132,6 @@ export default function HomeScreen() {
             <Ionicons name="add" size={36} color="#fff" />
           </TouchableOpacity>
         </Link>
-        <Link href="/completed" asChild>
-          <TouchableOpacity style={[styles.fab, { bottom: 140, backgroundColor: colors.success }]}>
-            <Ionicons name="checkmark-done" size={32} color="#fff" />
-          </TouchableOpacity>
-        </Link>
       </View>
     </SafeAreaView>
   );

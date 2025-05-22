@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, StatusBar } from 'react-native';
 import colors from '../constants/colors';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 interface HeaderProps {
   title: string;
@@ -11,10 +12,12 @@ interface HeaderProps {
 }
 
 export default function Header({ title, showBack = false, onBack, right }: HeaderProps) {
+  const router = useRouter();
+
   return (
     <View style={styles.headerWrapper}>
       {showBack ? (
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={28} color={colors.primary} />
         </TouchableOpacity>
       ) : (

@@ -19,6 +19,16 @@ export default function Navbar() {
           <Text style={[styles.navText, pathname === '/' && styles.active]}>Início</Text>
         </TouchableOpacity>
       </Link>
+      <Link href="/completed" asChild>
+        <TouchableOpacity style={styles.navItem}>
+          <Ionicons
+            name={pathname === '/completed' ? 'checkmark-done' : 'checkmark-done-outline'}
+            size={24}
+            color={pathname === '/completed' ? colors.primary : colors.text}
+          />
+          <Text style={[styles.navText, pathname === '/completed' && styles.active]}>Concluídos</Text>
+        </TouchableOpacity>
+      </Link>
       <Link href="/trash" asChild>
         <TouchableOpacity style={styles.navItem}>
           <Ionicons
