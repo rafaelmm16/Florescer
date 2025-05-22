@@ -51,6 +51,22 @@ export default function HomeScreen() {
     setSelectedHabit(null);
   };
 
+  const openHabitModal = (habit: Habit) => {
+    setSelectedHabit(habit);
+    setModalVisible(true);
+  };
+
+  const markHabitDone = () => {
+    if (!selectedHabit) return;
+    const updatedHabits = habits.map(h =>
+      h.id === selectedHabit.id ? { ...h, done: true } : h
+    );
+    setHabits(updatedHabits);
+    saveHabits({ habits: updatedHabits, trash });
+    setModalVisible(false);
+    setSelectedHabit(null);
+  };
+
   const isDark = theme === 'dark';
 
   return (
@@ -61,7 +77,11 @@ export default function HomeScreen() {
           data={habits}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <HabitItem habit={item} onToggle={toggleHabit} onDelete={() => askDeleteHabit(item)} />
+            <HabitItem
+              habit={item}
+              onPress={() => openHabitModal(item)}
+              onDelete={() => askDeleteHabit(item)}
+            />
           )}
           contentContainerStyle={habits.length === 0 && styles.emptyList}
           ListEmptyComponent={
@@ -70,7 +90,7 @@ export default function HomeScreen() {
           showsVerticalScrollIndicator={false}
         />
 
-        {/* Modal customizado */}
+        {/* Modal de detalhes do hábito */}
         <Modal
           visible={modalVisible}
           transparent
@@ -79,23 +99,28 @@ export default function HomeScreen() {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Mover para a lixeira?</Text>
+              <Text style={styles.modalTitle}>{selectedHabit?.name}</Text>
               <Text style={styles.modalMessage}>
-                Tem certeza que deseja mover "{selectedHabit?.name}" para a lixeira?
+                Criado em: {selectedHabit?.createdAt && new Date(selectedHabit.createdAt).toLocaleDateString()}
+              </Text>
+              <Text style={styles.modalMessage}>
+                Status: {selectedHabit?.done ? 'Concluído' : 'Pendente'}
               </Text>
               <View style={styles.modalActions}>
                 <TouchableOpacity
                   style={styles.modalCancel}
                   onPress={() => setModalVisible(false)}
                 >
-                  <Text style={{ color: colors.primary, fontWeight: 'bold' }}>Cancelar</Text>
+                  <Text style={{ color: colors.primary, fontWeight: 'bold' }}>Fechar</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.modalDelete}
-                  onPress={confirmDeleteHabit}
-                >
-                  <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Mover</Text>
-                </TouchableOpacity>
+                {!selectedHabit?.done && (
+                  <TouchableOpacity
+                    style={styles.modalDelete}
+                    onPress={markHabitDone}
+                  >
+                    <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Concluir</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           </View>
@@ -105,6 +130,11 @@ export default function HomeScreen() {
         <Link href="/new" asChild>
           <TouchableOpacity style={styles.fab}>
             <Ionicons name="add" size={36} color="#fff" />
+          </TouchableOpacity>
+        </Link>
+        <Link href="/completed" asChild>
+          <TouchableOpacity style={[styles.fab, { bottom: 140, backgroundColor: colors.success }]}>
+            <Ionicons name="checkmark-done" size={32} color="#fff" />
           </TouchableOpacity>
         </Link>
       </View>

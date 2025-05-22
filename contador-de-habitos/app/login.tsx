@@ -3,6 +3,7 @@ import { View, TextInput, TouchableOpacity, Text, StyleSheet, SafeAreaView, Plat
 import colors from '../constants/colors';
 import { useRouter } from 'expo-router';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
+import Header from '../components/Header';
 
 export default function LoginScreen() {
     const [username, setUsername] = useState('');
@@ -10,13 +11,13 @@ export default function LoginScreen() {
 
     const handleLogin = () => {
         if (username.trim()) {
-            // Aqui você pode salvar o usuário em AsyncStorage ou contexto
             router.replace('/');
         }
     };
 
     return (
         <SafeAreaView style={styles.container}>
+            {/* <Header title="Login" showBack onBack={() => router.back()} /> */}
             <View style={styles.form}>
                 <Text style={styles.title}>Entrar</Text>
                 <View style={styles.inputForm}>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Habit } from '../types/habit';
 import colors from '../constants/colors';
+import { useTheme } from './ThemeContext';
 
 interface Props {
   onSubmit: (habit: Habit) => void;
@@ -9,6 +10,8 @@ interface Props {
 
 export default function HabitForm({ onSubmit }: Props) {
   const [name, setName] = useState('');
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   const handleSubmit = () => {
     if (!name.trim()) return;
@@ -24,16 +27,27 @@ export default function HabitForm({ onSubmit }: Props) {
   return (
     <View style={styles.form}>
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            backgroundColor: isDark ? '#232136' : colors.card,
+            color: isDark ? '#fff' : colors.text,
+            borderColor: isDark ? colors.primary : colors.primary,
+          }
+        ]}
         placeholder="Nome do hábito"
-        placeholderTextColor={colors.placeholder}
+        placeholderTextColor={isDark ? '#aaa' : colors.placeholder}
         value={name}
         onChangeText={setName}
         returnKeyType="done"
         onSubmitEditing={handleSubmit}
       />
       <TouchableOpacity
-        style={[styles.button, !name.trim() && styles.buttonDisabled]}
+        style={[
+          styles.button,
+          !name.trim() && styles.buttonDisabled,
+          { backgroundColor: !name.trim() ? colors.placeholder : colors.primary }
+        ]}
         onPress={handleSubmit}
         disabled={!name.trim()}
       >

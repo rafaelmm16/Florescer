@@ -1,16 +1,14 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Habit } from '../types/habit';
-import { useRouter } from 'expo-router';
 import colors from '../constants/colors';
 
 interface Props {
   habit: Habit;
-  onToggle: (id: string) => void;
+  onPress: (habit: Habit) => void;
   onDelete?: (id: string) => void;
 }
 
-export default function HabitItem({ habit, onToggle, onDelete }: Props) {
-  const router = useRouter();
+export default function HabitItem({ habit, onPress, onDelete }: Props) {
   return (
     <View
       style={{
@@ -18,15 +16,11 @@ export default function HabitItem({ habit, onToggle, onDelete }: Props) {
         alignItems: 'center',
         padding: 16,
         marginVertical: 8,
-        backgroundColor: habit.done ? '#A5D6A7' : '#E0E0E0',
+        backgroundColor: '#E0E0E0',
         borderRadius: 8,
       }}
     >
-      <TouchableOpacity
-        onPress={() => onToggle(habit.id)}
-        onLongPress={() => router.push(`/habit/${habit.id}`)}
-        style={{ flex: 1 }}
-      >
+      <TouchableOpacity onPress={() => onPress(habit)} style={{ flex: 1 }}>
         <Text style={{ fontSize: 18 }}>{habit.name}</Text>
       </TouchableOpacity>
       {onDelete && (

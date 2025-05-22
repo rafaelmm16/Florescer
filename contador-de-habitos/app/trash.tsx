@@ -5,6 +5,7 @@ import { Habit } from '../types/habit';
 import Header from '../components/Header';
 import colors from '../constants/colors';
 import { useRouter } from 'expo-router';
+import { useTheme } from '../components/ThemeContext';
 
 export default function TrashScreen() {
   const [trash, setTrash] = useState<Habit[]>([]);
@@ -13,6 +14,8 @@ export default function TrashScreen() {
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
   const router = useRouter();
 
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   useEffect(() => {
     loadHabits().then(data => {
       setTrash(data.trash || []);
@@ -45,28 +48,46 @@ export default function TrashScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[
+      styles.container,
+      { backgroundColor: isDark ? '#181825' : colors.background }
+    ]}>
       <Header title="Lixeira" showBack onBack={() => router.back()} />
       <FlatList
         data={trash}
         keyExtractor={item => item.id}
         contentContainerStyle={trash.length === 0 && styles.emptyList}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>Nenhum hábito na lixeira.</Text>
+          <Text style={[
+            styles.emptyText,
+            { color: isDark ? '#aaa' : colors.placeholder }
+          ]}>Nenhum hábito na lixeira.</Text>
         }
         renderItem={({ item }) => (
-          <View style={styles.trashItem}>
-            <Text style={styles.trashText}>{item.name}</Text>
+          <View style={[
+            styles.trashItem,
+            { backgroundColor: isDark ? '#232136' : colors.card }
+          ]}>
+            <Text style={[
+              styles.trashText,
+              { color: isDark ? '#fff' : colors.text }
+            ]}>{item.name}</Text>
             <View style={{ flexDirection: 'row' }}>
               <TouchableOpacity
                 onPress={() => restoreHabit(item.id)}
-                style={styles.restoreButton}
+                style={[
+                  styles.restoreButton,
+                  { backgroundColor: colors.primary }
+                ]}
               >
                 <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Restaurar</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => confirmDelete(item)}
-                style={styles.deleteButton}
+                style={[
+                  styles.deleteButton,
+                  { backgroundColor: colors.danger }
+                ]}
               >
                 <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Excluir</Text>
               </TouchableOpacity>
@@ -83,14 +104,26 @@ export default function TrashScreen() {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Excluir permanentemente?</Text>
-            <Text style={styles.modalMessage}>
+          <View style={[
+            styles.modalContent,
+            { backgroundColor: isDark ? '#232136' : colors.card }
+          ]}>
+            <Text style={[
+              styles.modalTitle,
+              { color: colors.danger }
+            ]}>Excluir permanentemente?</Text>
+            <Text style={[
+              styles.modalMessage,
+              { color: isDark ? '#fff' : colors.text }
+            ]}>
               Tem certeza que deseja excluir "{selectedHabit?.name}" para sempre?
             </Text>
             <View style={styles.modalActions}>
               <TouchableOpacity
-                style={styles.modalCancel}
+                style={[
+                  styles.modalCancel,
+                  { backgroundColor: isDark ? '#232136' : '#F0F0F0' }
+                ]}
                 onPress={() => setModalVisible(false)}
               >
                 <Text style={{ color: colors.primary, fontWeight: 'bold' }}>Cancelar</Text>
