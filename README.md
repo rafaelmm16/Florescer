@@ -30,9 +30,6 @@ Um aplicativo mobile para controle e acompanhamento de hábitos, desenvolvido co
 - Expo CLI
 - Android Studio (para emulador Android) ou Xcode (para emulador iOS)
 
-## 📋 To-do
-- Tela de login em loop
-
 ## 🚀 Como executar o projeto
 
 1. **Clone o repositório**
@@ -137,13 +134,9 @@ O aplicativo utiliza `AsyncStorage` para persistir dados localmente:
 4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
 
-## 📄 Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
-
 ## 👨‍💻 Autor
 
-Desenvolvido com ❤️ por [Seu Nome]
+Desenvolvido com ❤️ por Rafael Merlo
 
 ## 🔮 Próximas Funcionalidades
 
@@ -153,6 +146,7 @@ Desenvolvido com ❤️ por [Seu Nome]
 - [ ] Backup na nuvem
 - [ ] Compartilhamento de progresso
 - [ ] Modo offline completo
+- [ ] Tela de login em loop
 
 ---
 
