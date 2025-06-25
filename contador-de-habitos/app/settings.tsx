@@ -1,36 +1,63 @@
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
-import Header from '../components/Header';
-import colors from '../constants/colors';
+import { View, StyleSheet, SafeAreaView, Alert } from 'react-native';
+import { Text, Switch, Button, Divider } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../components/ThemeContext';
+import Header from '../components/Header';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SettingsScreen() {
     const router = useRouter();
-    const { theme, toggleTheme } = useTheme();
-
-    const isDark = theme === 'dark';
+    const { toggleTheme, isDark, theme } = useTheme();
 
     const handleLogout = () => {
-        // Aqui você pode limpar dados do usuário se necessário
-        router.replace('/login');
+        Alert.alert(
+            "Confirmar Saída",
+            "Você tem certeza que deseja sair?",
+            [
+                { text: "Cancelar", style: "cancel" },
+                {
+                    text: "Sair",
+                    onPress: async () => {
+                        try {
+                            // Remove a marca de login do armazenamento
+                            await AsyncStorage.removeItem('hasLoggedIn');
+                            // Navega para a tela de login
+                            router.replace('/login');
+                        } catch (e) {
+                             console.error("Failed to remove login status", e);
+                             Alert.alert("Erro", "Não foi possível realizar o logout.");
+                        }
+                    },
+                    style: "destructive"
+                }
+            ]
+        );
     };
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#181825' : '#fff' }]}>
-            <Header title="Configurações" showBack onBack={() => router.back()} />
+        <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <Header title="Ajustes" showBack onBack={() => router.back()} />
             <View style={styles.content}>
-                <Text style={[styles.label, { color: isDark ? '#fff' : '#222' }]}>
-                    Tema: {isDark ? 'Dark' : 'Light'}
-                </Text>
-                <TouchableOpacity style={styles.button} onPress={toggleTheme}>
-                    <Text style={styles.buttonText}>
-                        Trocar para tema {isDark ? 'claro' : 'escuro'}
+                <View style={styles.optionRow}>
+                    <Text variant="bodyLarge" style={{ color: theme.colors.onSurface }}>
+                        Tema Escuro
                     </Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                    <Text style={styles.logoutButtonText}>Sair</Text>
-                </TouchableOpacity>
+                    <Switch value={isDark} onValueChange={toggleTheme} />
+                </View>
+
+                <Divider style={{ marginVertical: 20 }} />
+
+                <Button
+                    icon="logout"
+                    mode="contained"
+                    onPress={handleLogout}
+                    // Usando a cor de erro do tema para dar destaque
+                    buttonColor={theme.colors.error}
+                    textColor={theme.colors.onError}
+                    style={styles.logoutButton}
+                >
+                    Sair
+                </Button>
             </View>
         </SafeAreaView>
     );
@@ -41,35 +68,16 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     content: {
-        marginTop: 32,
+        flex: 1,
+        padding: 20,
+    },
+    optionRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-    },
-    label: {
-        fontSize: 18,
-        marginBottom: 16,
-    },
-    button: {
-        backgroundColor: colors.primary,
         paddingVertical: 12,
-        paddingHorizontal: 24,
-        borderRadius: 8,
-        marginBottom: 24,
-    },
-    buttonText: {
-        color: '#FFF',
-        fontWeight: 'bold',
-        fontSize: 16,
     },
     logoutButton: {
-        backgroundColor: colors.danger,
-        paddingVertical: 12,
-        paddingHorizontal: 24,
-        borderRadius: 8,
-        marginTop: 16,
-    },
-    logoutButtonText: {
-        color: '#FFF',
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
+      marginTop: 30,
+    }
 });

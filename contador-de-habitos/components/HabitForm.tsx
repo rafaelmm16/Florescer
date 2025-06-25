@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { TextInput, Button } from 'react-native-paper';
 import { Habit } from '../types/habit';
 import colors from '../constants/colors';
 import { useTheme } from './ThemeContext';
@@ -27,32 +28,30 @@ export default function HabitForm({ onSubmit }: Props) {
   return (
     <View style={styles.form}>
       <TextInput
-        style={[
-          styles.input,
-          {
-            backgroundColor: isDark ? '#232136' : colors.card,
-            color: isDark ? '#fff' : colors.text,
-            borderColor: isDark ? colors.primary : colors.primary,
-          }
-        ]}
-        placeholder="Nome do hábito"
-        placeholderTextColor={isDark ? '#aaa' : colors.placeholder}
+        label="Nome do Hábito"
         value={name}
         onChangeText={setName}
-        returnKeyType="done"
-        onSubmitEditing={handleSubmit}
+        mode="outlined"
+        style={styles.input}
+        theme={{
+          colors: {
+            primary: colors.primary,
+            background: isDark ? '#232136' : colors.card,
+            text: isDark ? '#fff' : colors.text,
+            placeholder: isDark ? '#aaa' : colors.placeholder
+          }
+        }}
       />
-      <TouchableOpacity
-        style={[
-          styles.button,
-          !name.trim() && styles.buttonDisabled,
-          { backgroundColor: !name.trim() ? colors.placeholder : colors.primary }
-        ]}
+      <Button
+        mode="contained"
         onPress={handleSubmit}
         disabled={!name.trim()}
+        style={styles.button}
+        labelStyle={styles.buttonText}
+        theme={{ colors: { primary: colors.primary } }}
       >
-        <Text style={styles.buttonText}>Salvar</Text>
-      </TouchableOpacity>
+        Salvar
+      </Button>
     </View>
   );
 }
@@ -65,31 +64,16 @@ const styles = StyleSheet.create({
   },
   input: {
     width: '100%',
-    padding: 16,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    backgroundColor: colors.card,
-    fontSize: 18,
-    color: colors.text,
     marginBottom: 18,
-    elevation: 2,
   },
   button: {
     width: '100%',
-    backgroundColor: colors.primary,
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-    elevation: 2,
-  },
-  buttonDisabled: {
-    backgroundColor: colors.placeholder,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
   buttonText: {
     color: '#FFF',
     fontWeight: 'bold',
-    fontSize: 18,
-    letterSpacing: 0.5,
+    fontSize: 16,
   },
 });

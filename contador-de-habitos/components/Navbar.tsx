@@ -1,64 +1,51 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Link, usePathname } from 'expo-router';
-import colors from '../constants/colors';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from './ThemeContext'; // 1. Importar o hook
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { theme } = useTheme(); // 2. Obter o tema atual
+
+  const navItems = [
+    { href: '/', icon: 'home', text: 'Início' },
+    { href: '/completed', icon: 'checkmark-done', text: 'Concluídos' },
+    { href: '/trash', icon: 'trash', text: 'Lixeira' },
+    { href: '/profile', icon: 'person', text: 'Perfil' },
+    { href: '/settings', icon: 'settings', text: 'Ajustes' },
+  ];
 
   return (
-    <View style={styles.navbar}>
-      <Link href="/" asChild>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons
-            name={pathname === '/' ? 'home' : 'home-outline'}
-            size={24}
-            color={pathname === '/' ? colors.primary : colors.text}
-          />
-          <Text style={[styles.navText, pathname === '/' && styles.active]}>Início</Text>
-        </TouchableOpacity>
-      </Link>
-      <Link href="/completed" asChild>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons
-            name={pathname === '/completed' ? 'checkmark-done' : 'checkmark-done-outline'}
-            size={24}
-            color={pathname === '/completed' ? colors.primary : colors.text}
-          />
-          <Text style={[styles.navText, pathname === '/completed' && styles.active]}>Concluídos</Text>
-        </TouchableOpacity>
-      </Link>
-      <Link href="/trash" asChild>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons
-            name={pathname === '/trash' ? 'trash' : 'trash-outline'}
-            size={24}
-            color={pathname === '/trash' ? colors.primary : colors.text}
-          />
-          <Text style={[styles.navText, pathname === '/trash' && styles.active]}>Lixeira</Text>
-        </TouchableOpacity>
-      </Link>
-      <Link href="/profile" asChild>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons
-            name={pathname === '/profile' ? 'person' : 'person-outline'}
-            size={24}
-            color={pathname === '/profile' ? colors.primary : colors.text}
-          />
-          <Text style={[styles.navText, pathname === '/profile' && styles.active]}>Perfil</Text>
-        </TouchableOpacity>
-      </Link>
-      <Link href="/settings" asChild>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons
-            name={pathname === '/settings' ? 'settings' : 'settings-outline'}
-            size={24}
-            color={pathname === '/settings' ? colors.primary : colors.text}
-          />
-          <Text style={[styles.navText, pathname === '/settings' && styles.active]}>Configurações</Text>
-        </TouchableOpacity>
-      </Link>
+    // 3. Aplicar as cores de fundo e borda do tema
+    <View style={[styles.navbar, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.outline }]}>
+      {navItems.map((item) => {
+        const isActive = pathname === item.href;
+        
+        // 4. Determinar as cores com base no tema e no estado (ativo/inativo)
+        const iconColor = isActive ? theme.colors.onSecondaryContainer : theme.colors.onSurfaceVariant;
+        const textColor = isActive ? theme.colors.onSurface : theme.colors.onSurfaceVariant;
+        const iconContainerStyle = isActive
+          ? [styles.iconContainer, { backgroundColor: theme.colors.secondaryContainer }]
+          : styles.iconContainer;
+
+        return (
+          <Link href={item.href} asChild key={item.href}>
+            <TouchableOpacity style={styles.navItem}>
+              <View style={iconContainerStyle}>
+                <Ionicons
+                  name={isActive ? item.icon : `${item.icon}-outline`}
+                  size={24}
+                  color={iconColor}
+                />
+              </View>
+              <Text style={[styles.navText, { color: textColor, fontWeight: isActive ? 'bold' : 'normal' }]}>
+                {item.text}
+              </Text>
+            </TouchableOpacity>
+          </Link>
+        );
+      })}
     </View>
   );
 }
@@ -68,10 +55,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    backgroundColor: colors.card,
-    paddingVertical: 10,
+    paddingBottom: 10,
+    paddingTop: 5,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
     position: 'absolute',
     left: 0,
     right: 0,
@@ -82,14 +68,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
   },
-  navText: {
-    color: colors.text,
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginTop: 2,
+  iconContainer: {
+    width: 64,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
   },
-  active: {
-    color: colors.primary,
-    textDecorationLine: 'underline',
+  navText: {
+    fontSize: 12,
+    marginTop: 2,
   },
 });
