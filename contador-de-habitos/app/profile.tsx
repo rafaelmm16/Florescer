@@ -1,67 +1,148 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, SafeAreaView, Image } from 'react-native';
-import { TextInput, Text } from 'react-native-paper';
-import Header from '../components/Header';
+import { View, StyleSheet, SafeAreaView, Alert, TouchableOpacity } from 'react-native';
+import { TextInput, Text, FAB, Avatar } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { useTheme } from '../components/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
+
+import { useTheme } from '../components/ThemeContext';
+import Header from '../components/Header';
+
+const USER_PROFILE_KEY = 'userProfile';
 
 export default function ProfileScreen() {
     const router = useRouter();
     const { theme } = useTheme();
 
-    const [name, setName] = useState("Usuário Exemplo");
-    const [age, setAge] = useState("28");
-    const [email, setEmail] = useState("usuario@exemplo.com");
-    const [photo, setPhoto] = useState("https://randomuser.me/api/portraits/men/1.jpg");
+    const [isEditing, setIsEditing] = useState(false);
+
+    // Estados para os dados do perfil, incluindo a imagem
+    const [imageUri, setImageUri] = useState<string | null>(null);
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [bio, setBio] = useState('');
 
     useEffect(() => {
-      // ... (lógica de carregamento inalterada)
+        const loadProfile = async () => {
+            try {
+                const savedProfile = await AsyncStorage.getItem(USER_PROFILE_KEY);
+                if (savedProfile) {
+                    const { name, email, bio, imageUri } = JSON.parse(savedProfile);
+                    setName(name);
+                    setEmail(email);
+                    setBio(bio);
+                    setImageUri(imageUri);
+                }
+            } catch (e) {
+                console.error("Failed to load profile data.", e);
+            }
+        };
+
+        loadProfile();
     }, []);
 
-    useEffect(() => { AsyncStorage.setItem('profile_name', name); }, [name]);
-    useEffect(() => { AsyncStorage.setItem('profile_age', age); }, [age]);
-    useEffect(() => { AsyncStorage.setItem('profile_email', email); }, [email]);
-    useEffect(() => { AsyncStorage.setItem('profile_photo', photo); }, [photo]);
+    // Função para escolher uma imagem da galeria
+    const handlePickImage = async () => {
+        // Só permite escolher imagem se estiver no modo de edição
+        if (!isEditing) return;
+
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1], // Força a imagem a ser quadrada
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            setImageUri(result.assets[0].uri);
+        }
+    };
+
+    const handleSaveChanges = async () => {
+        try {
+            // Inclui a URI da imagem nos dados a serem salvos
+            const profileData = { name, email, bio, imageUri };
+            await AsyncStorage.setItem(USER_PROFILE_KEY, JSON.stringify(profileData));
+            setIsEditing(false);
+            Alert.alert("Sucesso", "Perfil atualizado!");
+        } catch (e) {
+            console.error("Failed to save profile data.", e);
+            Alert.alert("Erro", "Não foi possível salvar as alterações.");
+        }
+    };
+
+    const handleFabPress = () => {
+        if (isEditing) {
+            handleSaveChanges();
+        } else {
+            setIsEditing(true);
+        }
+    };
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <Header title="Perfil" showBack onBack={() => router.back()} />
+            <Header title="Meu Perfil" showBack onBack={() => router.back()} />
+            
             <View style={styles.content}>
-                <Image source={{ uri: photo }} style={styles.avatar} />
+                {/* Container para a imagem de perfil */}
+                <View style={styles.avatarContainer}>
+                    <TouchableOpacity onPress={handlePickImage} disabled={!isEditing}>
+                        {/* Se tiver uma imagem, mostra. Senão, mostra um ícone genérico. */}
+                        {imageUri ? (
+                            <Avatar.Image size={120} source={{ uri: imageUri }} />
+                        ) : (
+                            <Avatar.Icon size={120} icon="account" />
+                        )}
+                        {/* Mostra um ícone de "câmera" sobre a imagem no modo de edição */}
+                        {isEditing && (
+                            <View style={[styles.editIcon, {backgroundColor: theme.colors.primary}]}>
+                                <Avatar.Icon size={30} icon="camera" color={theme.colors.onPrimary} style={{backgroundColor: 'transparent'}}/>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                </View>
+
                 <TextInput
                     label="Nome"
                     value={name}
                     onChangeText={setName}
-                    style={styles.input}
+                    editable={isEditing}
                     mode="outlined"
-                />
-                <TextInput
-                    label="Idade"
-                    value={age}
-                    onChangeText={setAge}
-                    style={styles.input}
-                    mode="outlined"
-                    keyboardType="numeric"
+                    activeOutlineColor={theme.colors.primary}
+                    style={[styles.input, isEditing && { backgroundColor: theme.colors.surfaceVariant }]}
                 />
                 <TextInput
                     label="Email"
                     value={email}
                     onChangeText={setEmail}
-                    style={styles.input}
+                    editable={isEditing}
                     mode="outlined"
                     keyboardType="email-address"
                     autoCapitalize="none"
+                    activeOutlineColor={theme.colors.primary}
+                    style={[styles.input, isEditing && { backgroundColor: theme.colors.surfaceVariant }]}
                 />
                 <TextInput
-                    label="URL da Foto"
-                    value={photo}
-                    onChangeText={setPhoto}
-                    style={styles.input}
+                    label="Bio"
+                    value={bio}
+                    onChangeText={setBio}
+                    editable={isEditing}
                     mode="outlined"
-                    autoCapitalize="none"
+                    multiline
+                    numberOfLines={3}
+                    activeOutlineColor={theme.colors.primary}
+                    style={[styles.input, isEditing && { backgroundColor: theme.colors.surfaceVariant }]}
                 />
             </View>
+
+            <FAB
+                style={styles.fab}
+                icon={isEditing ? "check" : "pencil"}
+                onPress={handleFabPress}
+                label={isEditing ? "Salvar" : "Editar"}
+                color={theme.colors.onPrimary}
+                theme={{ colors: { primaryContainer: theme.colors.primary } }}
+            />
         </SafeAreaView>
     );
 }
@@ -71,18 +152,27 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     content: {
-        marginTop: 32,
-        alignItems: 'center',
-        paddingHorizontal: 20,
+        flex: 1,
+        padding: 20,
     },
-    avatar: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
+    avatarContainer: {
+        alignItems: 'center',
         marginBottom: 24,
     },
+    editIcon: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        borderRadius: 15,
+        padding: 2,
+    },
     input: {
-        width: '100%',
-        marginBottom: 16,
+        marginBottom: 15,
+    },
+    fab: {
+        position: 'absolute',
+        margin: 16,
+        right: 0,
+        bottom: 80,
     },
 });

@@ -4,24 +4,17 @@ import { useRouter } from 'expo-router';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import { TextInput, Button, Text } from 'react-native-paper';
 import { useTheme } from '../components/ThemeContext';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../components/AuthContext'; // Importar useAuth
 
 export default function LoginScreen() {
     const [username, setUsername] = useState('');
     const router = useRouter();
     const { theme } = useTheme();
+    const { login } = useAuth(); // Usar a função de login do contexto
 
     const handleLogin = async () => {
         if (username.trim()) {
-            try {
-                // Salva a marca de que o login foi feito
-                await AsyncStorage.setItem('hasLoggedIn', 'true');
-                // Navega para a tela principal
-                router.replace('/');
-            } catch (e) {
-                console.error("Failed to save login status", e);
-                Alert.alert("Erro", "Não foi possível salvar seu login.");
-            }
+            await login(); // Chamar a função de login
         }
     };
 
@@ -77,6 +70,7 @@ export default function LoginScreen() {
     );
 }
 
+// Estilos permanecem os mesmos
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -86,7 +80,7 @@ const styles = StyleSheet.create({
     },
     form: {
         padding: 30,
-        borderRadius: 28, // Material 3 usa bordas mais arredondadas
+        borderRadius: 28,
         width: 340,
         alignItems: 'center',
         elevation: 4,
@@ -126,7 +120,7 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
     signupLink: {
-        color: '#6C63FF', // Usando a cor primária
+        color: '#6C63FF',
         fontWeight: 'bold',
     },
 });

@@ -1,53 +1,36 @@
-import HabitForm from '../components/HabitForm';
-import { useEffect, useState } from 'react';
-import { loadHabits, saveHabits } from '../utils/storage';
-import { Habit } from '../types/habit';
-import { SafeAreaView, StyleSheet } from 'react-native';
-import colors from '../constants/colors';
+import { StyleSheet, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
-import Header from '../components/Header';
+
+// 1. Importe o hook useTheme do seu contexto
 import { useTheme } from '../components/ThemeContext';
 
+import Header from '../components/Header';
+import HabitForm from '../components/HabitForm';
+import { Habit } from '../types/habit';
+import { saveHabit } from '../utils/storage';
+
 export default function NewHabitScreen() {
-  const [habits, setHabits] = useState<Habit[]>([]);
-  const router = useRouter();
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
+    const router = useRouter();
+    
+    // 2. Chame o hook para obter o tema atual
+    const { theme } = useTheme();
 
-  useEffect(() => {
-    loadHabits().then(data => {
-      setHabits(data?.habits || []);
-    });
-  }, []);
+    const handleSave = async (habit: Omit<Habit, 'id'>) => {
+        await saveHabit(habit);
+        router.push('/');
+    };
 
-  const handleSubmit = (newHabit: Habit) => {
-    loadHabits().then(data => {
-      const updated = [...(data?.habits || []), newHabit];
-      saveHabits({ habits: updated, trash: data?.trash || [] });
-      if (router.canGoBack()) {
-        router.back();
-      } else {
-        router.replace('/');
-      }
-    });
-  };
-
-  return (
-    <SafeAreaView style={[
-      styles.container,
-      { backgroundColor: isDark ? '#181825' : colors.background }
-    ]}>
-      <Header title="Adicionar Novo Hábito" showBack onBack={() => router.back()} />
-      <HabitForm onSubmit={handleSubmit} />
-    </SafeAreaView>
-  );
+    // 3. Aplique a cor de fundo do tema ao contêiner principal (SafeAreaView)
+    return (
+        <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <Header title="Novo Hábito" showBack onBack={() => router.back()} />
+            <HabitForm onSave={handleSave} />
+        </SafeAreaView>
+    );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    paddingHorizontal: 16,
-    paddingTop: 0,
-  },
+    container: {
+        flex: 1,
+    },
 });

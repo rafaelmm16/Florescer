@@ -3,11 +3,12 @@ import { Text, Switch, Button, Divider } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../components/ThemeContext';
 import Header from '../components/Header';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../components/AuthContext'; // Importar useAuth
 
 export default function SettingsScreen() {
     const router = useRouter();
     const { toggleTheme, isDark, theme } = useTheme();
+    const { logout } = useAuth(); // Usar a função de logout do contexto
 
     const handleLogout = () => {
         Alert.alert(
@@ -18,15 +19,7 @@ export default function SettingsScreen() {
                 {
                     text: "Sair",
                     onPress: async () => {
-                        try {
-                            // Remove a marca de login do armazenamento
-                            await AsyncStorage.removeItem('hasLoggedIn');
-                            // Navega para a tela de login
-                            router.replace('/login');
-                        } catch (e) {
-                             console.error("Failed to remove login status", e);
-                             Alert.alert("Erro", "Não foi possível realizar o logout.");
-                        }
+                        await logout(); // Chamar a função de logout
                     },
                     style: "destructive"
                 }
@@ -51,7 +44,6 @@ export default function SettingsScreen() {
                     icon="logout"
                     mode="contained"
                     onPress={handleLogout}
-                    // Usando a cor de erro do tema para dar destaque
                     buttonColor={theme.colors.error}
                     textColor={theme.colors.onError}
                     style={styles.logoutButton}
