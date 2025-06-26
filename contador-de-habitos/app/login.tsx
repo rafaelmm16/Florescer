@@ -11,22 +11,16 @@ export default function LoginScreen() {
     const router = useRouter();
     const { theme } = useTheme();
 
-    const handleLogin = () => {
+    const handleLogin = async () => {
         if (username.trim()) {
-            router.replace('/');
-        }
-
-        const handleLogin = async () => {
-            if (username.trim()) {
-                try {
-                    // Salva a marca de que o login foi feito
-                    await AsyncStorage.setItem('hasLoggedIn', 'true');
-                    // Navega para a tela principal
-                    router.replace('/');
-                } catch (e) {
-                    console.error("Failed to save login status", e);
-                    Alert.alert("Erro", "Não foi possível salvar seu login.");
-                }
+            try {
+                // Salva a marca de que o login foi feito
+                await AsyncStorage.setItem('hasLoggedIn', 'true');
+                // Navega para a tela principal
+                router.replace('/');
+            } catch (e) {
+                console.error("Failed to save login status", e);
+                Alert.alert("Erro", "Não foi possível salvar seu login.");
             }
         }
     };

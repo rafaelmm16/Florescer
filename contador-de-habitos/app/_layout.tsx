@@ -11,23 +11,32 @@ function MainLayout() {
   const router = useRouter();
   const { theme } = useTheme();
 
+  // Estado para controlar se a verificação de login foi concluída
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {
         const hasLoggedIn = await AsyncStorage.getItem('hasLoggedIn');
+
+        // Se o usuário está logado e está na tela de login, redireciona para a home
         if (hasLoggedIn === 'true') {
-          // Se já logou antes, vai para a tela inicial
-          router.replace('/');
-        } else {
-          // Se não, vai para a tela de login
-          router.replace('/login');
+          if (pathname === '/login') {
+            router.replace('/');
+          }
+        } 
+        // Se o usuário NÃO está logado e NÃO está na tela de login, redireciona para o login
+        else {
+          if (pathname !== '/login') {
+            router.replace('/login');
+          }
         }
       } catch (e) {
-        console.error("Failed to check login status", e);
+        console.error("Falha ao verificar o status de login", e);
         // Em caso de erro, manda para o login por segurança
-        router.replace('/login');
+        if (pathname !== '/login') {
+            router.replace('/login');
+        }
       } finally {
         // Marca que a verificação terminou e a UI pode ser renderizada
         setIsReady(true);
@@ -35,7 +44,7 @@ function MainLayout() {
     };
 
     checkLoginStatus();
-  }, []);
+  }, [pathname]); // A dependência do `pathname` garante que a lógica roda na mudança de rota
 
   // Enquanto a verificação acontece, mostramos um loading
   // para evitar um "flash" da tela errada.
@@ -47,7 +56,7 @@ function MainLayout() {
     );
   }
 
-  // Defina as rotas onde a Navbar NÃO deve aparecer
+  // Define as rotas onde a Navbar NÃO deve aparecer
   const hideNavbarOnRoutes = ['/login', '/new', '/habit/[id]'];
   const showNavbar = !hideNavbarOnRoutes.includes(pathname);
 

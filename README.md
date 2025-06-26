@@ -146,7 +146,6 @@ Desenvolvido com ❤️ por Rafael Merlo
 - [ ] Backup na nuvem
 - [ ] Compartilhamento de progresso
 - [ ] Modo offline completo
-- [ ] Tela de login em loop
 
 ---
 
