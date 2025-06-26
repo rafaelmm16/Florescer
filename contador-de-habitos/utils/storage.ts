@@ -14,3 +14,10 @@ export async function loadHabits(): Promise<{ habits: Habit[]; trash: Habit[] }>
 export async function saveHabits(data: { habits: Habit[]; trash: Habit[] }) {
   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
+
+// Adicione esta nova função
+export async function saveHabit(newHabit: Habit) {
+  const data = await loadHabits();
+  const updatedHabits = [...data.habits, newHabit];
+  await saveHabits({ ...data, habits: updatedHabits });
+}
