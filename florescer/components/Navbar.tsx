@@ -12,7 +12,6 @@ export default function Navbar() {
     { href: '/', icon: 'home', text: 'Início' },
     { href: '/completed', icon: 'checkmark-done', text: 'Concluídos' },
     { href: '/trash', icon: 'trash', text: 'Lixeira' },
-    { href: '/profile', icon: 'person', text: 'Perfil' },
     { href: '/settings', icon: 'settings', text: 'Ajustes' },
   ];
 

@@ -38,6 +38,15 @@ export default function SettingsScreen() {
                     <Switch value={isDark} onValueChange={toggleTheme} />
                 </View>
 
+                <Button
+                    icon="account-circle-outline"
+                    mode="outlined"
+                    onPress={() => router.push('/profile')}
+                    style={styles.profileButton}
+                >
+                    Meu Perfil
+                </Button>
+
                 <Divider style={{ marginVertical: 20 }} />
 
                 <Button
@@ -68,6 +77,9 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingVertical: 12,
+    },
+    profileButton: {
+      marginTop: 20,
     },
     logoutButton: {
       marginTop: 30,
