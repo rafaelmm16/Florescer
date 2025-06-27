@@ -19,23 +19,6 @@ export default function RoutineItem({ routine, onUpdate, onRestore, onDeletePerm
 
   const progressPercentage = routine.goal > 0 ? routine.progress / routine.goal : 0;
 
-  const handleIncrement = () => {
-    if (routine.progress < routine.goal) {
-      const updatedRoutine = { ...routine, progress: routine.progress + 1 };
-      if (updatedRoutine.progress === routine.goal) {
-        updatedRoutine.isCompleted = true;
-      }
-      onUpdate(updatedRoutine);
-    }
-  };
-
-  const handleDecrement = () => {
-    if (routine.progress > 0) {
-      const updatedRoutine = { ...routine, progress: routine.progress - 1, isCompleted: false };
-      onUpdate(updatedRoutine);
-    }
-  };
-  
   const handleSetCompleted = () => {
     const updatedRoutine = { ...routine, progress: routine.goal, isCompleted: true };
     onUpdate(updatedRoutine);
@@ -59,9 +42,9 @@ export default function RoutineItem({ routine, onUpdate, onRestore, onDeletePerm
       ]
     );
   };
-  
+
   const handleRestore = () => {
-      if(onRestore) onRestore(routine.id);
+    if (onRestore) onRestore(routine.id);
   };
 
   const handleDeletePermanent = () => {
@@ -73,8 +56,8 @@ export default function RoutineItem({ routine, onUpdate, onRestore, onDeletePerm
         {
           text: "Excluir",
           onPress: () => {
-              if(onDeletePermanent) onDeletePermanent(routine.id)
-            },
+            if (onDeletePermanent) onDeletePermanent(routine.id)
+          },
           style: "destructive",
         },
       ]
@@ -87,26 +70,26 @@ export default function RoutineItem({ routine, onUpdate, onRestore, onDeletePerm
         <View style={styles.header}>
           <Text variant="titleMedium">{routine.name}</Text>
           {!isTrash && (
-             <View style={styles.actions}>
-                <IconButton icon="check" size={20} onPress={handleSetCompleted} />
-                <IconButton icon="pencil" size={20} onPress={handleEdit} />
-                <IconButton icon="delete" size={20} onPress={handleDelete} />
-             </View>
+            <View style={styles.actions}>
+              <IconButton icon="check" size={20} onPress={handleSetCompleted} />
+              <IconButton icon="pencil" size={20} onPress={handleEdit} />
+              <IconButton icon="delete" size={20} onPress={handleDelete} />
+            </View>
           )}
         </View>
-        
+
         {!isTrash && (
-            <>
-                <Text>Meta: {routine.progress} / {routine.goal}</Text>
-                <ProgressBar progress={progressPercentage} color={theme.colors.primary} style={styles.progressBar} />
-            </>
+          <>
+            <Text>Meta: {routine.progress} / {routine.goal}</Text>
+            <ProgressBar progress={progressPercentage} color={theme.colors.primary} style={styles.progressBar} />
+          </>
         )}
 
         {isTrash && (
-            <View style={styles.trashControls}>
-                <Button icon="restore" mode="outlined" onPress={handleRestore}>Restaurar</Button>
-                <Button icon="delete-forever" mode="contained" onPress={handleDeletePermanent} buttonColor={theme.colors.error}>Excluir</Button>
-            </View>
+          <View style={styles.trashControls}>
+            <Button icon="restore" mode="outlined" onPress={handleRestore}>Restaurar</Button>
+            <Button icon="delete-forever" mode="contained" onPress={handleDeletePermanent} buttonColor={theme.colors.error}>Excluir</Button>
+          </View>
         )}
 
       </Card.Content>
@@ -115,32 +98,31 @@ export default function RoutineItem({ routine, onUpdate, onRestore, onDeletePerm
 }
 
 const styles = StyleSheet.create({
-  // Estilos permanecem os mesmos
-    card: {
-        marginVertical: 8,
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    actions: {
-        flexDirection: 'row',
-    },
-    progressBar: {
-        marginTop: 10,
-        height: 8,
-        borderRadius: 4,
-    },
-    controls: {
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-        alignItems: 'center',
-        marginTop: 10,
-    },
-    trashControls: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginTop: 20,
-    }
+  card: {
+    marginVertical: 8,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  actions: {
+    flexDirection: 'row',
+  },
+  progressBar: {
+    marginTop: 10,
+    height: 8,
+    borderRadius: 4,
+  },
+  controls: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  trashControls: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 20,
+  }
 });
