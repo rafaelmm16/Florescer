@@ -35,6 +35,11 @@ export default function RoutineItem({ routine, onUpdate, onRestore, onDeletePerm
       onUpdate(updatedRoutine);
     }
   };
+  
+  const handleSetCompleted = () => {
+    const updatedRoutine = { ...routine, progress: routine.goal, isCompleted: true };
+    onUpdate(updatedRoutine);
+  };
 
   const handleEdit = () => {
     router.push(`/routine/${routine.id}`);
@@ -83,6 +88,7 @@ export default function RoutineItem({ routine, onUpdate, onRestore, onDeletePerm
           <Text variant="titleMedium">{routine.name}</Text>
           {!isTrash && (
              <View style={styles.actions}>
+                <IconButton icon="check" size={20} onPress={handleSetCompleted} />
                 <IconButton icon="pencil" size={20} onPress={handleEdit} />
                 <IconButton icon="delete" size={20} onPress={handleDelete} />
              </View>
@@ -93,10 +99,6 @@ export default function RoutineItem({ routine, onUpdate, onRestore, onDeletePerm
             <>
                 <Text>Meta: {routine.progress} / {routine.goal}</Text>
                 <ProgressBar progress={progressPercentage} color={theme.colors.primary} style={styles.progressBar} />
-                <View style={styles.controls}>
-                    <IconButton icon="minus" mode='contained' size={20} onPress={handleDecrement} disabled={routine.progress <= 0}/>
-                    <IconButton icon="plus" mode='contained' size={20} onPress={handleIncrement} disabled={routine.progress >= routine.goal}/>
-                </View>
             </>
         )}
 

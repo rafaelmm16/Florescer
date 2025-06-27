@@ -1,8 +1,9 @@
+// app/index.tsx
 import { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, SafeAreaView, Text } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { Button } from 'react-native-paper';
+import { Button, FAB } from 'react-native-paper';
 import { Routine } from '../types/routine';
 import { getRoutines, updateRoutine } from '../utils/storage';
 import RoutineItem from '../components/RoutineItem';
@@ -28,19 +29,18 @@ export default function HomeScreen() {
     }
   }, [isFocused]);
 
-  // CORRIGIDO: Atualiza o estado da UI diretamente após a ação
   const handleUpdateRoutine = async (updatedRoutine: Routine) => {
-    await updateRoutine(updatedRoutine);
-    
+    await updateRoutine(updatedRoutine); 
+
     if (updatedRoutine.isDeleted || updatedRoutine.isCompleted) {
-      // Remove a rotina da lista se foi deletada ou concluída
       setRoutines(prevRoutines =>
-        prevRoutines.filter(r => r.id !== updatedRoutine.id)
+        prevRoutines.filter(routine => routine.id !== updatedRoutine.id)
       );
     } else {
-      // Atualiza a rotina na lista para outras mudanças (ex: progresso)
       setRoutines(prevRoutines =>
-        prevRoutines.map(r => r.id === updatedRoutine.id ? updatedRoutine : r)
+        prevRoutines.map(routine =>
+          routine.id === updatedRoutine.id ? updatedRoutine : routine
+        )
       );
     }
   };
@@ -59,18 +59,19 @@ export default function HomeScreen() {
           <View style={styles.emptyContainer}>
             <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>Nenhuma rotina por aqui.</Text>
             <Button mode="contained" onPress={() => router.push('/new')}>
-              Crie sua primeira rotina!
+              Crie a sua primeira rotina!
             </Button>
           </View>
         }
       />
-      <Button
+      <FAB
         icon="plus"
-        mode="fab"
         style={[styles.fab, { backgroundColor: theme.colors.primaryContainer }]}
-        onPress={() => router.push('/new')}
         color={theme.colors.onPrimaryContainer}
+        size="medium" // 'small', 'medium', ou 'large'
+        onPress={() => router.push('/new')}
       />
+
       <Navbar />
     </SafeAreaView>
   );
@@ -82,13 +83,13 @@ const styles = StyleSheet.create({
     },
     list: {
         padding: 8,
-        paddingBottom: 80, 
+        paddingBottom: 80,
     },
     fab: {
         position: 'absolute',
         margin: 16,
         right: 0,
-        bottom: 80, 
+        bottom: 80,
     },
     emptyContainer: {
         flex: 1,
