@@ -53,36 +53,6 @@ npx expo start
 - Ou pressione `a` para abrir no emulador Android
 - Ou pressione `i` para abrir no emulador iOS
 
-## 📂 Estrutura do Projeto
-
-```
-florescer/
-├── app/                    # Telas do aplicativo
-│   ├── _layout.tsx        # Layout principal e navegação
-│   ├── index.tsx          # Tela inicial (lista de hábitos)
-│   ├── new.tsx            # Tela para criar novo hábito
-│   ├── completed.tsx      # Tela de hábitos concluídos
-│   ├── trash.tsx          # Tela da lixeira
-│   ├── profile.tsx        # Tela do perfil do usuário
-│   ├── settings.tsx       # Tela de configurações
-│   ├── login.tsx          # Tela de login
-│   └── habit/
-│       └── [id].tsx       # Detalhes de um hábito específico
-├── components/            # Componentes reutilizáveis
-│   ├── Header.tsx         # Cabeçalho das telas
-│   ├── HabitForm.tsx      # Formulário para criar hábitos
-│   ├── HabitItem.tsx      # Item individual de hábito
-│   ├── Navbar.tsx         # Barra de navegação inferior
-│   └── ThemeContext.tsx   # Contexto de tema (claro/escuro)
-├── constants/             # Constantes do projeto
-│   ├── colors.ts          # Paleta de cores
-│   └── typography.ts      # Configurações de tipografia
-├── types/                 # Definições de tipos TypeScript
-│   └── habit.ts           # Tipo do objeto Habit
-├── utils/                 # Utilitários
-│   └── storage.ts         # Funções para AsyncStorage
-└── README.md
-```
 
 ## 🎨 Design System
 
@@ -107,10 +77,6 @@ O aplicativo utiliza um design system consistente com:
 ### 🗑️ Lixeira
 - Hábitos excluídos podem ser restaurados
 - Opção de exclusão permanente
-
-### 👤 Perfil
-- Informações pessoais editáveis
-- Upload de foto de perfil via URL
 
 ### ⚙️ Configurações
 - Alternância entre tema claro e escuro
