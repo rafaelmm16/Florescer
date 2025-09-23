@@ -1,9 +1,17 @@
+// florescer/app/_layout.tsx
+
 import { Stack, useRouter, usePathname } from 'expo-router';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { useEffect } from 'react';
 import { ThemeProvider, useTheme } from '../components/ThemeContext';
 import Navbar from '../components/Navbar';
 import { AuthProvider, useAuth } from '../components/AuthContext';
+// 1. Importações necessárias
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+
+// 2. Impedir que a tela de splash desapareça automaticamente
+SplashScreen.preventAutoHideAsync();
 
 function MainLayout() {
   const pathname = usePathname();
@@ -12,23 +20,19 @@ function MainLayout() {
   const { isLoggedIn, isLoading } = useAuth();
 
   useEffect(() => {
-    // Se o carregamento terminou, verificamos o estado de login
     if (!isLoading) {
       if (isLoggedIn) {
-        // Se o usuário está logado e tenta acessar o login, redireciona para a home
         if (pathname === '/login') {
           router.replace('/');
         }
       } else {
-        // Se o usuário NÃO está logado, redireciona para o login (a menos que já esteja lá)
         if (pathname !== '/login') {
           router.replace('/login');
         }
       }
     }
-  }, [isLoggedIn, isLoading, pathname]); // Dependências corretas
+  }, [isLoggedIn, isLoading, pathname]);
 
-  // Mostra um indicador de carregamento enquanto o estado de login é verificado
   if (isLoading) {
     return (
       <View style={[styles.container, { justifyContent: 'center', backgroundColor: theme.colors.background }]}>
@@ -37,9 +41,11 @@ function MainLayout() {
     );
   }
 
-  // Define as rotas onde a Navbar NÃO deve aparecer
-  const hideNavbarOnRoutes = ['/login', '/new', '/habit/[id]'];
-  const showNavbar = !hideNavbarOnRoutes.includes(pathname);
+  const hideNavbarOnRoutes = ['/login', '/new', '/routine/[id]'];
+  // Corrigido para corresponder ao caminho de edição
+  const isEditRoute = /^\/routine\/\w+$/.test(pathname);
+  const showNavbar = !hideNavbarOnRoutes.includes(pathname) && !isEditRoute;
+
 
   return (
     <View style={styles.container}>
@@ -50,6 +56,24 @@ function MainLayout() {
 }
 
 export default function RootLayout() {
+  // 3. Carregar as fontes
+  const [fontsLoaded, fontError] = useFonts({
+    'Lato-Regular': require('../assets/fonts/Lato-Regular.ttf'),
+    'Lato-Bold': require('../assets/fonts/Lato-Bold.ttf'),
+  });
+
+  useEffect(() => {
+    // 4. Esconder a tela de splash quando as fontes carregarem (ou der erro)
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
+  // 5. Não renderizar nada até que as fontes estejam prontas
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
   return (
     <ThemeProvider>
       <AuthProvider>

@@ -27,19 +27,14 @@ export default function CompletedScreen() {
         }
     }, [isFocused]);
 
-    // --- FUNÇÃO DE UPDATE CORRIGIDA ---
     const handleUpdateCompletedRoutine = async (updatedRoutine: Routine) => {
         await updateRoutine(updatedRoutine);
 
-        // Se a rotina foi movida para a lixeira (isDeleted)
-        // ou se não está mais completa (!isCompleted)
-        // ela deve ser removida desta tela.
         if (updatedRoutine.isDeleted || !updatedRoutine.isCompleted) {
             setCompletedRoutines(prevRoutines =>
                 prevRoutines.filter(routine => routine.id !== updatedRoutine.id)
             );
         } else {
-            // Caso contrário, atualiza o item na lista
             setCompletedRoutines(prevRoutines =>
                 prevRoutines.map(routine =>
                     routine.id === updatedRoutine.id ? updatedRoutine : routine
@@ -69,7 +64,6 @@ export default function CompletedScreen() {
     );
 }
 
-// Os estilos permanecem os mesmos
 const styles = StyleSheet.create({
     container: {
         flex: 1,

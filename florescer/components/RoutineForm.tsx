@@ -1,7 +1,8 @@
 // contador-de-habitos/components/RoutineForm.tsx
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { TextInput, Button, Text } from 'react-native-paper';
+// Importe o HelperText
+import { TextInput, Button, Text, HelperText } from 'react-native-paper'; 
 import { Routine } from '../types/routine';
 import { useTheme } from './ThemeContext';
 
@@ -16,17 +17,25 @@ export default function RoutineForm({ onSave, initialRoutine }: RoutineFormProps
   const [days, setDays] = useState(initialRoutine?.days || []);
   const [goal, setGoal] = useState(initialRoutine?.goal.toString() || '1');
 
+  // 1. Adicionar estado para o erro do campo de nome
+  const [nameError, setNameError] = useState<string | null>(null);
+
   const weekDays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
   const toggleDay = (dayIndex: number) => {
-    if (days.includes(dayIndex)) {
-      setDays(days.filter(d => d !== dayIndex));
-    } else {
-      setDays([...days, dayIndex]);
-    }
+    setDays(days.includes(dayIndex) ? days.filter(d => d !== dayIndex) : [...days, dayIndex]);
   };
 
   const handleSubmit = () => {
+    // 2. Mover a validação para cá
+    if (!name || name.trim() === "") {
+      setNameError("O nome da rotina não pode estar vazio.");
+      return;
+    }
+
+    // Limpa o erro se a validação passar
+    setNameError(null);
+
     if (name.trim() && goal.trim()) {
       onSave({
         name,
@@ -38,13 +47,28 @@ export default function RoutineForm({ onSave, initialRoutine }: RoutineFormProps
 
   return (
     <View style={styles.container}>
-      <TextInput
-        label="Nome da Rotina"
-        value={name}
-        onChangeText={setName}
-        mode="outlined"
-        style={styles.input}
-      />
+      {/* 3. Envolver o TextInput em uma View para o HelperText */}
+      <View>
+        <TextInput
+          label="Nome da Rotina"
+          value={name}
+          onChangeText={(text) => {
+            setName(text);
+            // Limpa o erro assim que o usuário começa a digitar
+            if (nameError) {
+              setNameError(null);
+            }
+          }}
+          mode="outlined"
+          style={styles.input}
+          error={!!nameError} // Mostra a borda vermelha se houver erro
+        />
+        {/* 4. Adicionar o HelperText para exibir a mensagem de erro */}
+        <HelperText type="error" visible={!!nameError}>
+          {nameError}
+        </HelperText>
+      </View>
+
       <TextInput
         label="Meta de Repetições (por dia)"
         value={goal}

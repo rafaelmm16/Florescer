@@ -1,3 +1,5 @@
+// florescer/components/RoutineItem.tsx
+
 import React from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { Text, Card, IconButton, ProgressBar, Button } from 'react-native-paper';
@@ -71,8 +73,12 @@ export default function RoutineItem({ routine, onUpdate, onRestore, onDeletePerm
           <Text variant="titleMedium">{routine.name}</Text>
           {!isTrash && (
             <View style={styles.actions}>
-              <IconButton icon="check" size={20} onPress={handleSetCompleted} />
-              <IconButton icon="pencil" size={20} onPress={handleEdit} />
+              {!routine.isCompleted && (
+                <>
+                  <IconButton icon="check" size={20} onPress={handleSetCompleted} />
+                  <IconButton icon="pencil" size={20} onPress={handleEdit} />
+                </>
+              )}
               <IconButton icon="delete" size={20} onPress={handleDelete} />
             </View>
           )}

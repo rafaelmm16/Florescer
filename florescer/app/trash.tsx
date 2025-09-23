@@ -19,7 +19,7 @@ export default function TrashScreen() {
     // Limpa rotinas na lixeira há mais de 30 dias
     const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
     const currentRoutines = allRoutines.filter(r => !r.isDeleted || (r.deletedTimestamp && r.deletedTimestamp > thirtyDaysAgo));
-    
+
     if(currentRoutines.length < allRoutines.length){
         await saveRoutines(currentRoutines);
     }
@@ -60,12 +60,12 @@ export default function TrashScreen() {
         data={deletedRoutines}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <RoutineItem 
-            routine={item} 
-            onUpdate={() => {}} 
-            onRestore={restoreRoutine} 
+          <RoutineItem
+            routine={item}
+            onUpdate={() => {}}
+            onRestore={restoreRoutine}
             onDeletePermanent={deleteRoutinePermanently}
-            isTrash 
+            isTrash
           />
         )}
         contentContainerStyle={styles.list}

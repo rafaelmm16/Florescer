@@ -10,15 +10,9 @@ export default function NewRoutineScreen() {
   const router = useRouter();
   const { theme } = useTheme();
 
-  // A tipagem de 'routineData' foi ajustada para corresponder à nova função 'addRoutine'
+  // A validação foi removida daqui, pois agora está no RoutineForm
   const handleSave = async (routineData: { name: string, days: number[], goal: number }) => {
     try {
-      // Validação para garantir que o nome não está vazio
-      if (!routineData.name || routineData.name.trim() === "") {
-        Alert.alert("Erro", "O nome da rotina não pode estar vazio.");
-        return;
-      }
-      
       await addRoutine(routineData);
       Alert.alert("Sucesso", "Rotina salva com sucesso!");
       router.push('/');
@@ -30,10 +24,10 @@ export default function NewRoutineScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-       <Header title="Nova Rotina" showBack onBack={() => router.back()} />
-       <View style={styles.content}>
-            <RoutineForm onSave={handleSave} />
-       </View>
+      <Header title="Nova Rotina" showBack onBack={() => router.back()} />
+      <View style={styles.content}>
+        <RoutineForm onSave={handleSave} />
+      </View>
     </SafeAreaView>
   );
 }

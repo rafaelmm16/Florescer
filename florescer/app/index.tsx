@@ -30,13 +30,16 @@ export default function HomeScreen() {
   }, [isFocused]);
 
   const handleUpdateRoutine = async (updatedRoutine: Routine) => {
-    await updateRoutine(updatedRoutine); 
+    await updateRoutine(updatedRoutine);
 
+    // Se a rotina for movida para a lixeira OU marcada como concluída,
+    // ela é removida da lista da tela inicial.
     if (updatedRoutine.isDeleted || updatedRoutine.isCompleted) {
       setRoutines(prevRoutines =>
         prevRoutines.filter(routine => routine.id !== updatedRoutine.id)
       );
     } else {
+      // Caso contrário, apenas atualiza o item na lista.
       setRoutines(prevRoutines =>
         prevRoutines.map(routine =>
           routine.id === updatedRoutine.id ? updatedRoutine : routine
@@ -78,27 +81,27 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    list: {
-        padding: 8,
-        paddingBottom: 80,
-    },
-    fab: {
-        position: 'absolute',
-        margin: 16,
-        right: 0,
-        bottom: 80,
-    },
-    emptyContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 50,
-    },
-    emptyText: {
-        fontSize: 18,
-        marginBottom: 20,
-    }
+  container: {
+    flex: 1,
+  },
+  list: {
+    padding: 8,
+    paddingBottom: 80,
+  },
+  fab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 80,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  emptyText: {
+    fontSize: 18,
+    marginBottom: 20,
+  }
 });
