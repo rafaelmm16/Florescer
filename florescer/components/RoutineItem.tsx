@@ -11,11 +11,11 @@ interface RoutineItemProps {
   routine: Routine;
   onUpdate: (routine: Routine) => void;
   onDelete: (id: string) => void;
-  drag: () => void;
-  isActive: boolean;
+  drag?: () => void;
+  isActive?: boolean;
 }
 
-export default function RoutineItem({ routine, onUpdate, onDelete, drag, isActive }: RoutineItemProps) {
+export default function RoutineItem({ routine, onUpdate, onDelete, drag, isActive = false }: RoutineItemProps) {
   const router = useRouter();
   const { theme } = useTheme();
 
@@ -27,6 +27,7 @@ export default function RoutineItem({ routine, onUpdate, onDelete, drag, isActiv
   };
 
   const handleEdit = () => {
+    if (routine.isCompleted) return;
     router.push(`/routine/${routine.id}`);
   };
 
@@ -48,8 +49,8 @@ export default function RoutineItem({ routine, onUpdate, onDelete, drag, isActiv
   return (
     <TouchableOpacity
       onPress={handleEdit}
-      onLongPress={drag}
-      disabled={isActive}
+      onLongPress={!routine.isCompleted ? drag : undefined}
+      disabled={isActive || routine.isCompleted}
     >
       <Card style={[styles.card, { elevation: isActive ? 8 : 2 }]}>
         <Card.Content>
@@ -68,6 +69,10 @@ export default function RoutineItem({ routine, onUpdate, onDelete, drag, isActiv
               <Text>Meta: {routine.progress} / {routine.goal}</Text>
               <ProgressBar progress={progressPercentage} color={theme.colors.primary} style={styles.progressBar} />
             </>
+          )}
+
+          {routine.isCompleted && (
+            <Text style={{color: theme.colors.primary, marginTop: 10, fontWeight: 'bold'}}>Concluída!</Text>
           )}
         </Card.Content>
       </Card>

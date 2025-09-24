@@ -1,5 +1,5 @@
 // florescer/app/_layout.tsx
-
+import 'react-native-gesture-handler';
 import { Stack, usePathname } from 'expo-router';
 import { View, StyleSheet } from 'react-native';
 import { useEffect } from 'react';

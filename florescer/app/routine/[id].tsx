@@ -28,8 +28,12 @@ export default function EditRoutineScreen() {
     loadRoutine();
   }, [id]);
 
-  const handleSave = async (routineData: Omit<Routine, 'id' | 'progress' | 'isCompleted' | 'isDeleted'>) => {
+  const handleSave = async (routineData: Omit<Routine, 'id' | 'progress' | 'isCompleted'>) => {
     if (routine) {
+      if (routine.isCompleted) {
+        Alert.alert("Atenção", "Não é possível editar uma rotina já concluída.");
+        return;
+      }
       const updatedRoutine = {
         ...routine,
         ...routineData,
@@ -45,7 +49,11 @@ export default function EditRoutineScreen() {
       <Header title="Editar Rotina" showBack onBack={() => router.back()} />
       <View style={styles.content}>
         {routine ? (
-          <RoutineForm onSave={handleSave} initialRoutine={routine} />
+          <RoutineForm
+            onSave={handleSave}
+            initialRoutine={routine}
+            disabled={routine.isCompleted}
+          />
         ) : null}
       </View>
     </SafeAreaView>

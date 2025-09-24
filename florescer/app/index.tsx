@@ -1,5 +1,5 @@
 // app/index.tsx
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, SafeAreaView, Text } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -20,6 +20,7 @@ export default function HomeScreen() {
 
   const loadRoutines = async () => {
     const allRoutines = await getRoutines();
+    // Filtra apenas as rotinas ativas (não concluídas)
     const activeRoutines = allRoutines.filter(r => !r.isCompleted);
     setRoutines(activeRoutines);
   };
@@ -32,19 +33,25 @@ export default function HomeScreen() {
 
   const handleUpdateRoutine = async (updatedRoutine: Routine) => {
     await updateRoutine(updatedRoutine);
-    if (updatedRoutine.isCompleted) {
-      setRoutines(prev => prev.filter(r => r.id !== updatedRoutine.id));
-    } else {
-      setRoutines(prev => prev.map(r => r.id === updatedRoutine.id ? updatedRoutine : r));
-    }
+    loadRoutines();
   };
 
   const handleDeleteRoutine = async (id: string) => {
     await deleteRoutine(id);
-    setRoutines(prev => prev.filter(r => r.id !== id));
+    setRoutines(prevRoutines => prevRoutines.filter(routine => routine.id !== id));
   };
 
-  const renderItem = ({ item, drag, isActive }: RenderItemParams<Routine>) => {
+  const handleDragEnd = async ({ data }: { data: Routine[] }) => {
+    // Atualiza o estado local para uma resposta visual imediata
+    setRoutines(data);
+    // Busca todas as rotinas para preservar as concluídas
+    const allRoutines = await getRoutines();
+    const completedRoutines = allRoutines.filter(r => r.isCompleted);
+    // Salva a nova ordem das rotinas ativas junto com as concluídas
+    await saveRoutines([...data, ...completedRoutines]);
+  };
+
+  const renderItem = useCallback(({ item, drag, isActive }: RenderItemParams<Routine>) => {
     return (
       <RoutineItem
         routine={item}
@@ -54,19 +61,16 @@ export default function HomeScreen() {
         isActive={isActive}
       />
     );
-  };
+  }, [handleUpdateRoutine, handleDeleteRoutine]);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Header title="Minhas Rotinas" />
       <DraggableFlatList
         data={routines}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        onDragEnd={({ data }) => {
-          setRoutines(data);
-          saveRoutines(data);
-        }}
+        onDragEnd={handleDragEnd}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
@@ -95,13 +99,13 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: 8,
-    paddingBottom: 80,
+    paddingBottom: 80, // Adicionado espaço para o FAB e Navbar
   },
   fab: {
     position: 'absolute',
     margin: 16,
     right: 0,
-    bottom: 80,
+    bottom: 80, // Ajuste para ficar acima da Navbar
   },
   emptyContainer: {
     flex: 1,
@@ -112,5 +116,5 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     marginBottom: 20,
-  }
+  },
 });
