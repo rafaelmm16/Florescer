@@ -7,7 +7,6 @@ Um aplicativo mobile para controle e acompanhamento de hábitos, desenvolvido co
 - ✅ **Gerenciamento de Hábitos**: Criar, visualizar e organizar seus hábitos
 - 🎯 **Marcar como Concluído**: Acompanhe o progresso dos seus hábitos
 - 📋 **Hábitos Concluídos**: Visualize todos os hábitos que você já completou
-- 🗑️ **Lixeira**: Restaure ou exclua permanentemente hábitos removidos
 - 👤 **Perfil do Usuário**: Personalize suas informações pessoais
 - ⚙️ **Configurações**: Alterne entre tema claro e escuro
 - 📱 **Interface Responsiva**: Design adaptado para diferentes tamanhos de tela
