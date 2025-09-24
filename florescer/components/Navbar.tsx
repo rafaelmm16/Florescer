@@ -28,11 +28,11 @@ export default function Navbar() {
           : styles.iconContainer;
 
         return (
-          <Link href={item.href} asChild key={item.href}>
+          <Link href={item.href as any} asChild key={item.href}>
             <TouchableOpacity style={styles.navItem}>
               <View style={iconContainerStyle}>
                 <Ionicons
-                  name={isActive ? item.icon : `${item.icon}-outline`}
+                  name={isActive ? (item.icon as any) : (`${item.icon}-outline` as any)}
                   size={24}
                   color={iconColor}
                 />

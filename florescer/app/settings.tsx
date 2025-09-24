@@ -10,7 +10,7 @@ export default function SettingsScreen() {
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <Header title="Ajustes" showBack={() => router.back()} />
+            <Header title="Ajustes" showBack={true} onBack={() => router.back()} />
             <View style={styles.content}>
                 <View style={styles.optionRow}>
                     <Text variant="bodyLarge" style={{ color: theme.colors.onSurface }}>

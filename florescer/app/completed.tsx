@@ -43,7 +43,11 @@ export default function CompletedScreen() {
                 data={completedRoutines}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
-                    <RoutineItem routine={item} onUpdate={handleUpdateCompletedRoutine} onDelete={handleDeleteRoutine} />
+                    <RoutineItem
+                        routine={item}
+                        onUpdate={handleUpdateCompletedRoutine}
+                        onDelete={handleDeleteRoutine}
+                    />
                 )}
                 contentContainerStyle={styles.list}
                 ListEmptyComponent={

@@ -1,20 +1,21 @@
 // florescer/components/RoutineItem.tsx
 
 import React from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { Text, Card, IconButton, ProgressBar } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { Routine } from '../types/routine';
 import { useTheme } from './ThemeContext';
-import { deleteRoutine } from '../utils/storage';
 
 interface RoutineItemProps {
   routine: Routine;
   onUpdate: (routine: Routine) => void;
   onDelete: (id: string) => void;
+  drag: () => void;
+  isActive: boolean;
 }
 
-export default function RoutineItem({ routine, onUpdate, onDelete }: RoutineItemProps) {
+export default function RoutineItem({ routine, onUpdate, onDelete, drag, isActive }: RoutineItemProps) {
   const router = useRouter();
   const { theme } = useTheme();
 
@@ -29,10 +30,10 @@ export default function RoutineItem({ routine, onUpdate, onDelete }: RoutineItem
     router.push(`/routine/${routine.id}`);
   };
 
-  const handleDelete = () => {
+  const handleDeleteConfirmation = () => {
     Alert.alert(
-      "Excluir Permanentemente",
-      `Esta ação não pode ser desfeita. Deseja excluir a rotina "${routine.name}" para sempre?`,
+      "Excluir Rotina",
+      `Tem certeza que deseja excluir a rotina "${routine.name}"? Esta ação não pode ser desfeita.`,
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -45,29 +46,32 @@ export default function RoutineItem({ routine, onUpdate, onDelete }: RoutineItem
   };
 
   return (
-    <Card style={styles.card}>
-      <Card.Content>
-        <View style={styles.header}>
-          <Text variant="titleMedium">{routine.name}</Text>
-          <View style={styles.actions}>
-            {!routine.isCompleted && (
-              <>
+    <TouchableOpacity
+      onPress={handleEdit}
+      onLongPress={drag}
+      disabled={isActive}
+    >
+      <Card style={[styles.card, { elevation: isActive ? 8 : 2 }]}>
+        <Card.Content>
+          <View style={styles.header}>
+            <Text variant="titleMedium">{routine.name}</Text>
+            <View style={styles.actions}>
+              {!routine.isCompleted && (
                 <IconButton icon="check" size={20} onPress={handleSetCompleted} />
-                <IconButton icon="pencil" size={20} onPress={handleEdit} />
-              </>
-            )}
-            <IconButton icon="delete" size={20} onPress={handleDelete} />
+              )}
+              <IconButton icon="delete" size={20} onPress={handleDeleteConfirmation} />
+            </View>
           </View>
-        </View>
 
-        {!routine.isCompleted && (
-          <>
-            <Text>Meta: {routine.progress} / {routine.goal}</Text>
-            <ProgressBar progress={progressPercentage} color={theme.colors.primary} style={styles.progressBar} />
-          </>
-        )}
-      </Card.Content>
-    </Card>
+          {!routine.isCompleted && (
+            <>
+              <Text>Meta: {routine.progress} / {routine.goal}</Text>
+              <ProgressBar progress={progressPercentage} color={theme.colors.primary} style={styles.progressBar} />
+            </>
+          )}
+        </Card.Content>
+      </Card>
+    </TouchableOpacity>
   );
 }
 

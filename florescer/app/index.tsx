@@ -1,11 +1,12 @@
 // app/index.tsx
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, SafeAreaView, Text } from 'react-native';
+import { View, StyleSheet, SafeAreaView, Text } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { Button, FAB } from 'react-native-paper';
+import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import { Routine } from '../types/routine';
-import { getRoutines, updateRoutine, deleteRoutine } from '../utils/storage';
+import { getRoutines, updateRoutine, deleteRoutine, saveRoutines } from '../utils/storage';
 import RoutineItem from '../components/RoutineItem';
 import Navbar from '../components/Navbar';
 import Header from '../components/Header';
@@ -31,23 +32,41 @@ export default function HomeScreen() {
 
   const handleUpdateRoutine = async (updatedRoutine: Routine) => {
     await updateRoutine(updatedRoutine);
-    loadRoutines();
+    if (updatedRoutine.isCompleted) {
+      setRoutines(prev => prev.filter(r => r.id !== updatedRoutine.id));
+    } else {
+      setRoutines(prev => prev.map(r => r.id === updatedRoutine.id ? updatedRoutine : r));
+    }
   };
 
   const handleDeleteRoutine = async (id: string) => {
     await deleteRoutine(id);
-    loadRoutines();
+    setRoutines(prev => prev.filter(r => r.id !== id));
+  };
+
+  const renderItem = ({ item, drag, isActive }: RenderItemParams<Routine>) => {
+    return (
+      <RoutineItem
+        routine={item}
+        onUpdate={handleUpdateRoutine}
+        onDelete={handleDeleteRoutine}
+        drag={drag}
+        isActive={isActive}
+      />
+    );
   };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Header title="Minhas Rotinas" />
-      <FlatList
+      <DraggableFlatList
         data={routines}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <RoutineItem routine={item} onUpdate={handleUpdateRoutine} onDelete={handleDeleteRoutine} />
-        )}
+        renderItem={renderItem}
+        onDragEnd={({ data }) => {
+          setRoutines(data);
+          saveRoutines(data);
+        }}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
@@ -62,10 +81,9 @@ export default function HomeScreen() {
         icon="plus"
         style={[styles.fab, { backgroundColor: theme.colors.primaryContainer }]}
         color={theme.colors.onPrimaryContainer}
-        size="medium" // 'small', 'medium', ou 'large'
+        size="medium"
         onPress={() => router.push('/new')}
       />
-
       <Navbar />
     </SafeAreaView>
   );
