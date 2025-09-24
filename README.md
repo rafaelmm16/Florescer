@@ -10,7 +10,6 @@ Um aplicativo mobile para controle e acompanhamento de hábitos, desenvolvido co
 - 🗑️ **Lixeira**: Restaure ou exclua permanentemente hábitos removidos
 - 👤 **Perfil do Usuário**: Personalize suas informações pessoais
 - ⚙️ **Configurações**: Alterne entre tema claro e escuro
-- 🔒 **Sistema de Login**: Autenticação simples com armazenamento local
 - 📱 **Interface Responsiva**: Design adaptado para diferentes tamanhos de tela
 
 ## 🛠️ Tecnologias Utilizadas
@@ -28,7 +27,6 @@ Um aplicativo mobile para controle e acompanhamento de hábitos, desenvolvido co
 - Node.js (versão 18 ou superior)
 - npm ou yarn
 - Expo CLI
-- Android Studio (para emulador Android) ou Xcode (para emulador iOS)
 
 ## 🚀 Como executar o projeto
 
@@ -62,43 +60,6 @@ O aplicativo utiliza um design system consistente com:
 - **Tipografia**: Hierarquia clara de textos
 - **Componentes**: Interface baseada em Material Design
 - **Navegação**: Sistema de abas na parte inferior
-
-## 📱 Telas Principais
-
-### 🏠 Tela Inicial
-- Lista todos os hábitos pendentes
-- Botão flutuante para adicionar novos hábitos
-- Funcionalidade de arrastar e soltar para reordenar
-
-### ✅ Hábitos Concluídos
-- Visualiza todos os hábitos marcados como concluídos
-- Interface limpa e organizada
-
-### 🗑️ Lixeira
-- Hábitos excluídos podem ser restaurados
-- Opção de exclusão permanente
-
-### ⚙️ Configurações
-- Alternância entre tema claro e escuro
-- Configurações salvas localmente
-
-## 💾 Armazenamento
-
-O aplicativo utiliza `AsyncStorage` para persistir dados localmente:
-
-- Lista de hábitos
-- Hábitos na lixeira
-- Informações do perfil
-- Configurações de tema
-- Status de login
-
-## 🤝 Contribuindo
-
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
 
 ## 👨‍💻 Autor
 
