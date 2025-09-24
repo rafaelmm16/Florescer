@@ -5,7 +5,7 @@ import { useIsFocused } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { Button, FAB } from 'react-native-paper';
 import { Routine } from '../types/routine';
-import { getRoutines, updateRoutine } from '../utils/storage';
+import { getRoutines, updateRoutine, deleteRoutine } from '../utils/storage';
 import RoutineItem from '../components/RoutineItem';
 import Navbar from '../components/Navbar';
 import Header from '../components/Header';
@@ -19,7 +19,7 @@ export default function HomeScreen() {
 
   const loadRoutines = async () => {
     const allRoutines = await getRoutines();
-    const activeRoutines = allRoutines.filter(r => !r.isDeleted && !r.isCompleted);
+    const activeRoutines = allRoutines.filter(r => !r.isCompleted);
     setRoutines(activeRoutines);
   };
 
@@ -31,21 +31,12 @@ export default function HomeScreen() {
 
   const handleUpdateRoutine = async (updatedRoutine: Routine) => {
     await updateRoutine(updatedRoutine);
+    loadRoutines();
+  };
 
-    // Se a rotina for movida para a lixeira OU marcada como concluída,
-    // ela é removida da lista da tela inicial.
-    if (updatedRoutine.isDeleted || updatedRoutine.isCompleted) {
-      setRoutines(prevRoutines =>
-        prevRoutines.filter(routine => routine.id !== updatedRoutine.id)
-      );
-    } else {
-      // Caso contrário, apenas atualiza o item na lista.
-      setRoutines(prevRoutines =>
-        prevRoutines.map(routine =>
-          routine.id === updatedRoutine.id ? updatedRoutine : routine
-        )
-      );
-    }
+  const handleDeleteRoutine = async (id: string) => {
+    await deleteRoutine(id);
+    loadRoutines();
   };
 
   return (
@@ -55,7 +46,7 @@ export default function HomeScreen() {
         data={routines}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <RoutineItem routine={item} onUpdate={handleUpdateRoutine} />
+          <RoutineItem routine={item} onUpdate={handleUpdateRoutine} onDelete={handleDeleteRoutine} />
         )}
         contentContainerStyle={styles.list}
         ListEmptyComponent={

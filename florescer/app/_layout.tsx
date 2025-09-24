@@ -1,11 +1,11 @@
 // florescer/app/_layout.tsx
 
-import { Stack, useRouter, usePathname } from 'expo-router';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { Stack, usePathname } from 'expo-router';
+import { View, StyleSheet } from 'react-native';
 import { useEffect } from 'react';
-import { ThemeProvider, useTheme } from '../components/ThemeContext';
+import { ThemeProvider } from '../components/ThemeContext';
 import Navbar from '../components/Navbar';
-import { AuthProvider, useAuth } from '../components/AuthContext';
+import { AuthProvider } from '../components/AuthContext';
 // 1. Importações necessárias
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -15,33 +15,8 @@ SplashScreen.preventAutoHideAsync();
 
 function MainLayout() {
   const pathname = usePathname();
-  const router = useRouter();
-  const { theme } = useTheme();
-  const { isLoggedIn, isLoading } = useAuth();
 
-  useEffect(() => {
-    if (!isLoading) {
-      if (isLoggedIn) {
-        if (pathname === '/login') {
-          router.replace('/');
-        }
-      } else {
-        if (pathname !== '/login') {
-          router.replace('/login');
-        }
-      }
-    }
-  }, [isLoggedIn, isLoading, pathname]);
-
-  if (isLoading) {
-    return (
-      <View style={[styles.container, { justifyContent: 'center', backgroundColor: theme.colors.background }]}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
-    );
-  }
-
-  const hideNavbarOnRoutes = ['/login', '/new', '/routine/[id]'];
+  const hideNavbarOnRoutes = ['/new', '/routine/[id]'];
   // Corrigido para corresponder ao caminho de edição
   const isEditRoute = /^\/routine\/\w+$/.test(pathname);
   const showNavbar = !hideNavbarOnRoutes.includes(pathname) && !isEditRoute;

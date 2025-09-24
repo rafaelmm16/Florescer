@@ -25,11 +25,10 @@ export const saveRoutines = async (routines: Routine[]): Promise<void> => {
   }
 };
 
-// Adiciona uma nova rotina (CORRIGIDO)
+// Adiciona uma nova rotina
 export const addRoutine = async (data: { name: string, days: number[], goal: number }): Promise<void> => {
   const routines = await getRoutines();
   
-  // Cria o objeto completo da nova rotina com todos os campos necessários
   const newRoutine: Routine = {
     id: Date.now().toString(),
     name: data.name,
@@ -37,7 +36,6 @@ export const addRoutine = async (data: { name: string, days: number[], goal: num
     goal: data.goal,
     progress: 0,
     isCompleted: false,
-    isDeleted: false,
   };
 
   routines.push(newRoutine);
@@ -48,5 +46,12 @@ export const addRoutine = async (data: { name: string, days: number[], goal: num
 export const updateRoutine = async (updatedRoutine: Routine): Promise<void> => {
   let routines = await getRoutines();
   routines = routines.map(routine => (routine.id === updatedRoutine.id ? updatedRoutine : routine));
+  await saveRoutines(routines);
+};
+
+// Deleta uma rotina permanentemente
+export const deleteRoutine = async (id: string): Promise<void> => {
+  let routines = await getRoutines();
+  routines = routines.filter(routine => routine.id !== id);
   await saveRoutines(routines);
 };

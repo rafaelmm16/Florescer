@@ -11,7 +11,6 @@ export default function Navbar() {
   const navItems = [
     { href: '/', icon: 'home', text: 'Início' },
     { href: '/completed', icon: 'checkmark-done', text: 'Concluídos' },
-    { href: '/trash', icon: 'trash', text: 'Lixeira' },
     { href: '/settings', icon: 'settings', text: 'Ajustes' },
   ];
 
@@ -20,7 +19,7 @@ export default function Navbar() {
     <View style={[styles.navbar, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.outline }]}>
       {navItems.map((item) => {
         const isActive = pathname === item.href;
-        
+
         // 4. Determinar as cores com base no tema e no estado (ativo/inativo)
         const iconColor = isActive ? theme.colors.onSecondaryContainer : theme.colors.onSurfaceVariant;
         const textColor = isActive ? theme.colors.onSurface : theme.colors.onSurfaceVariant;

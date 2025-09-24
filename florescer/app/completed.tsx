@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, SafeAreaView, Text } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
-import { getRoutines, updateRoutine } from '../utils/storage';
+import { getRoutines, updateRoutine, deleteRoutine } from '../utils/storage';
 import RoutineItem from '../components/RoutineItem';
 import { Routine } from '../types/routine';
 import Header from '../components/Header';
@@ -16,8 +16,7 @@ export default function CompletedScreen() {
 
     const loadCompletedRoutines = async () => {
         const allRoutines = await getRoutines();
-        // Carrega rotinas que estão completas mas não deletadas
-        const filteredRoutines = allRoutines.filter(r => r.isCompleted && !r.isDeleted);
+        const filteredRoutines = allRoutines.filter(r => r.isCompleted);
         setCompletedRoutines(filteredRoutines);
     };
 
@@ -29,18 +28,12 @@ export default function CompletedScreen() {
 
     const handleUpdateCompletedRoutine = async (updatedRoutine: Routine) => {
         await updateRoutine(updatedRoutine);
+        loadCompletedRoutines();
+    };
 
-        if (updatedRoutine.isDeleted || !updatedRoutine.isCompleted) {
-            setCompletedRoutines(prevRoutines =>
-                prevRoutines.filter(routine => routine.id !== updatedRoutine.id)
-            );
-        } else {
-            setCompletedRoutines(prevRoutines =>
-                prevRoutines.map(routine =>
-                    routine.id === updatedRoutine.id ? updatedRoutine : routine
-                )
-            );
-        }
+    const handleDeleteRoutine = async (id: string) => {
+        await deleteRoutine(id);
+        loadCompletedRoutines();
     };
 
     return (
@@ -50,7 +43,7 @@ export default function CompletedScreen() {
                 data={completedRoutines}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
-                    <RoutineItem routine={item} onUpdate={handleUpdateCompletedRoutine} />
+                    <RoutineItem routine={item} onUpdate={handleUpdateCompletedRoutine} onDelete={handleDeleteRoutine} />
                 )}
                 contentContainerStyle={styles.list}
                 ListEmptyComponent={
