@@ -99,13 +99,15 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: 20,
+        gap: 4,
     },
     dayButton: {
         minWidth: 40,
-        paddingHorizontal: 0,
     },
     dayButtonLabel: {
-        fontSize: 12,
+        fontSize: 14,
+        marginHorizontal: 0,
+        paddingHorizontal: 4,
     },
     saveButton: {
         marginTop: 10,

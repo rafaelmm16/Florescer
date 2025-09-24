@@ -1,11 +1,12 @@
 // florescer/components/RoutineItem.tsx
 
 import React from 'react';
-import { View, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Alert } from 'react-native';
 import { Text, Card, IconButton, ProgressBar } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { Routine } from '../types/routine';
 import { useTheme } from './ThemeContext';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 
 interface RoutineItemProps {
   routine: Routine;
@@ -48,7 +49,6 @@ export default function RoutineItem({ routine, onUpdate, onDelete, drag, isActiv
 
   return (
     <TouchableOpacity
-      onPress={handleEdit}
       onLongPress={!routine.isCompleted ? drag : undefined}
       disabled={isActive || routine.isCompleted}
     >
@@ -59,6 +59,9 @@ export default function RoutineItem({ routine, onUpdate, onDelete, drag, isActiv
             <View style={styles.actions}>
               {!routine.isCompleted && (
                 <IconButton icon="check" size={20} onPress={handleSetCompleted} />
+              )}
+              {!routine.isCompleted && (
+                <IconButton icon="pencil" size={20} onPress={handleEdit} />
               )}
               <IconButton icon="delete" size={20} onPress={handleDeleteConfirmation} />
             </View>
