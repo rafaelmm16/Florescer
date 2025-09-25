@@ -22,7 +22,12 @@ function MainLayout() {
 
   return (
     <View style={styles.container}>
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: 'none', // Desativa a animação de transição entre telas
+        }}
+      />
       {showNavbar && <Navbar />}
     </View>
   );

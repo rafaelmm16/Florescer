@@ -1,9 +1,10 @@
 // app/index.tsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, SafeAreaView, Text } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useIsFocused } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { Button, FAB } from 'react-native-paper';
+import { Button } from 'react-native-paper'; // Removido o FAB
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import { Routine } from '../types/routine';
 import { getRoutines, updateRoutine, deleteRoutine, saveRoutines } from '../utils/storage';
@@ -11,16 +12,18 @@ import RoutineItem from '../components/RoutineItem';
 import Navbar from '../components/Navbar';
 import Header from '../components/Header';
 import { useTheme } from '../components/ThemeContext';
+import NewRoutineButton from '../components/NewRoutineButton';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { theme } = useTheme();
   const [routines, setRoutines] = useState<Routine[]>([]);
+  // Novo estado para controlar os cards expandidos
+  const [expandedRoutines, setExpandedRoutines] = useState<Set<string>>(new Set());
   const isFocused = useIsFocused();
 
   const loadRoutines = async () => {
     const allRoutines = await getRoutines();
-    // Filtra apenas as rotinas ativas (não concluídas)
     const activeRoutines = allRoutines.filter(r => !r.isCompleted);
     setRoutines(activeRoutines);
   };
@@ -31,9 +34,31 @@ export default function HomeScreen() {
     }
   }, [isFocused]);
 
+  // Função para alternar a expansão de um card
+  const toggleExpandRoutine = (id: string) => {
+    setExpandedRoutines(currentExpanded => {
+      const newExpanded = new Set(currentExpanded);
+      if (newExpanded.has(id)) {
+        newExpanded.delete(id);
+      } else {
+        newExpanded.add(id);
+      }
+      return newExpanded;
+    });
+  };
+
   const handleUpdateRoutine = async (updatedRoutine: Routine) => {
     await updateRoutine(updatedRoutine);
-    loadRoutines();
+
+    if (updatedRoutine.isCompleted) {
+      setRoutines(currentRoutines =>
+        currentRoutines.filter(r => r.id !== updatedRoutine.id)
+      );
+    } else {
+      setRoutines(currentRoutines =>
+        currentRoutines.map(r => (r.id === updatedRoutine.id ? updatedRoutine : r))
+      );
+    }
   };
 
   const handleDeleteRoutine = async (id: string) => {
@@ -42,12 +67,9 @@ export default function HomeScreen() {
   };
 
   const handleDragEnd = async ({ data }: { data: Routine[] }) => {
-    // Atualiza o estado local para uma resposta visual imediata
     setRoutines(data);
-    // Busca todas as rotinas para preservar as concluídas
     const allRoutines = await getRoutines();
     const completedRoutines = allRoutines.filter(r => r.isCompleted);
-    // Salva a nova ordem das rotinas ativas junto com as concluídas
     await saveRoutines([...data, ...completedRoutines]);
   };
 
@@ -59,9 +81,11 @@ export default function HomeScreen() {
         onDelete={handleDeleteRoutine}
         drag={drag}
         isActive={isActive}
+        isExpanded={expandedRoutines.has(item.id)}
+        onExpandToggle={() => toggleExpandRoutine(item.id)}
       />
     );
-  }, [handleUpdateRoutine, handleDeleteRoutine]);
+  }, [handleUpdateRoutine, handleDeleteRoutine, expandedRoutines]);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -81,13 +105,9 @@ export default function HomeScreen() {
           </View>
         }
       />
-      <FAB
-        icon="plus"
-        style={[styles.fab, { backgroundColor: theme.colors.primaryContainer }]}
-        color={theme.colors.onPrimaryContainer}
-        size="medium"
-        onPress={() => router.push('/new')}
-      />
+
+      <NewRoutineButton />
+
       <Navbar />
     </SafeAreaView>
   );
@@ -99,13 +119,7 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: 8,
-    paddingBottom: 80, // Adicionado espaço para o FAB e Navbar
-  },
-  fab: {
-    position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 80, // Ajuste para ficar acima da Navbar
+    paddingBottom: 80,
   },
   emptyContainer: {
     flex: 1,

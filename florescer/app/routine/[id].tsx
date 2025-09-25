@@ -1,7 +1,8 @@
 // contador-de-habitos/app/routine/[id].tsx
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, SafeAreaView, Alert } from 'react-native';
+import { View, StyleSheet, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Routine } from '../../types/routine';
 import { getRoutines, updateRoutine } from '../../utils/storage';
 import RoutineForm from '../../components/RoutineForm';

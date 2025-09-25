@@ -1,6 +1,6 @@
 // app/completed.tsx
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, SafeAreaView, Text } from 'react-native';
+import { View, StyleSheet, FlatList, Text } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { getRoutines, updateRoutine, deleteRoutine } from '../utils/storage';
 import RoutineItem from '../components/RoutineItem';
@@ -8,6 +8,7 @@ import { Routine } from '../types/routine';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import { useTheme } from '../components/ThemeContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function CompletedScreen() {
     const [completedRoutines, setCompletedRoutines] = useState<Routine[]>([]);
@@ -47,6 +48,8 @@ export default function CompletedScreen() {
                         routine={item}
                         onUpdate={handleUpdateCompletedRoutine}
                         onDelete={handleDeleteRoutine}
+                        isExpanded={false}
+                        onExpandToggle={() => {}}
                     />
                 )}
                 contentContainerStyle={styles.list}
