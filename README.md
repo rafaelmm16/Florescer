@@ -64,15 +64,6 @@ O aplicativo utiliza um design system consistente com:
 
 Desenvolvido com ❤️ por Rafael Merlo
 
-## 🔮 Próximas Funcionalidades
-
-- [ ] Estatísticas de progresso
-- [ ] Lembretes e notificações
-- [ ] Categorias de hábitos
-- [ ] Backup na nuvem
-- [ ] Compartilhamento de progresso
-- [ ] Modo offline completo
-
 ---
 
 **Florescer** - Transforme pequenos hábitos em grandes conquistas! 🌱✨
