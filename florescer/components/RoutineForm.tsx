@@ -86,30 +86,30 @@ export default function RoutineForm({ onSave, initialRoutine, disabled = false }
 }
 
 const styles = StyleSheet.create({
-    container: {
-        padding: 20,
-    },
-    input: {
-        marginBottom: 15,
-    },
-    label: {
-        marginBottom: 10,
-    },
-    daysContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 20,
-        gap: 4,
-    },
-    dayButton: {
-        minWidth: 40,
-    },
-    dayButtonLabel: {
-        fontSize: 14,
-        marginHorizontal: 0,
-        paddingHorizontal: 4,
-    },
-    saveButton: {
-        marginTop: 10,
-    },
+  container: {
+    padding: 20,
+  },
+  input: {
+    marginBottom: 15,
+  },
+  label: {
+    marginBottom: 10,
+  },
+  daysContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    gap: 4,
+  },
+  dayButton: {
+    minWidth: 40,
+  },
+  dayButtonLabel: {
+    fontSize: 14,
+    marginHorizontal: 0,
+    paddingHorizontal: 4,
+  },
+  saveButton: {
+    marginTop: 10,
+  },
 });

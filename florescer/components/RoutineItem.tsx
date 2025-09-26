@@ -117,13 +117,12 @@ export default function RoutineItem({ routine, onUpdate, onDelete, drag, isActiv
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
     >
-      <Animated.View style={[styles.card, { backgroundColor: '#fff480', transform: [{ scale: scaleValue }] }]}>
+      <Animated.View style={[styles.card, { transform: [{ scale: scaleValue }] }]}>
         <View style={styles.cardImage}>
           <LightningIcon />
         </View>
         <View style={styles.cardContent}>
           <View style={styles.cardTop}>
-            {/* <-- MUDANÇA AQUI: Usando o index para o número */}
             <Text style={styles.cardTitle}>{`0${index + 1}.`}</Text>
             <Text style={styles.cardText}>{routine.name}</Text>
           </View>
@@ -132,6 +131,15 @@ export default function RoutineItem({ routine, onUpdate, onDelete, drag, isActiv
             <OptionsIcon />
           </View>
         </View>
+        {isExpanded && (
+          <View style={styles.expandedView}>
+            <IconButton icon="minus" onPress={handleDecrement} />
+            <IconButton icon="plus" onPress={handleIncrement} />
+            <IconButton icon="check" onPress={handleSetCompleted} />
+            <IconButton icon="pencil" onPress={handleEdit} />
+            <IconButton icon="delete" onPress={handleDeleteConfirmation} />
+          </View>
+        )}
       </Animated.View>
     </Pressable>
   );
@@ -140,8 +148,9 @@ export default function RoutineItem({ routine, onUpdate, onDelete, drag, isActiv
 const styles = StyleSheet.create({
   card: {
     width: 320,
-    borderRadius: 30, // 2.5em é aproximadamente 30
-    padding: 24, // 2em é aproximadamente 24
+    backgroundColor: '#fff480',
+    borderRadius: 30,
+    padding: 24,
     marginVertical: 8,
     alignSelf: 'center',
     elevation: 4,
@@ -152,7 +161,7 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     justifyContent: 'space-between',
-    height: 120, // Altura fixa para manter a consistência
+    height: 120,
   },
   cardTop: {
     flexDirection: 'row',
@@ -180,5 +189,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     pointerEvents: 'none',
+  },
+  expandedView: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 10,
   },
 });

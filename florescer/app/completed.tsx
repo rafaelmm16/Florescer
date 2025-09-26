@@ -43,13 +43,14 @@ export default function CompletedScreen() {
             <FlatList
                 data={completedRoutines}
                 keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => (
+                renderItem={({ item, index }) => (
                     <RoutineItem
                         routine={item}
                         onUpdate={handleUpdateCompletedRoutine}
                         onDelete={handleDeleteRoutine}
                         isExpanded={false}
                         onExpandToggle={() => {}}
+                        index={index}
                     />
                 )}
                 contentContainerStyle={styles.list}

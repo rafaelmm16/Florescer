@@ -83,7 +83,7 @@ export default function NewRoutineButton() {
     >
       <Animated.View style={[styles.flipContainer, containerAnimatedStyle]}>
         <Animated.View style={[styles.flipper, styles.front, frontAnimatedStyle]}>
-          <LinearGradient colors={['#ff6347', '#f76c6c']} style={styles.gradient}>
+          <LinearGradient colors={['#4759ff', '#a86cf7']} style={styles.gradient}>
             <PlusIcon />
           </LinearGradient>
         </Animated.View>
