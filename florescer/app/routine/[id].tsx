@@ -1,10 +1,9 @@
-// contador-de-habitos/app/routine/[id].tsx
 import { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Routine } from '../../types/routine';
-import { getRoutines, updateRoutine } from '../../utils/storage';
+import { useRoutineStore } from '../../store/useRoutineStore';
 import RoutineForm from '../../components/RoutineForm';
 import Header from '../../components/Header';
 import { useTheme } from '../../components/ThemeContext';
@@ -13,21 +12,19 @@ export default function EditRoutineScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { theme } = useTheme();
+  
+  const { routines, updateRoutine } = useRoutineStore();
   const [routine, setRoutine] = useState<Routine | null>(null);
 
   useEffect(() => {
-    const loadRoutine = async () => {
-      const routines = await getRoutines();
-      const routineToEdit = routines.find(r => r.id === id);
-      if (routineToEdit) {
-        setRoutine(routineToEdit);
-      } else {
-        Alert.alert("Erro", "Rotina não encontrada.");
-        router.back();
-      }
-    };
-    loadRoutine();
-  }, [id]);
+    const routineToEdit = routines.find(r => r.id === id);
+    if (routineToEdit) {
+      setRoutine(routineToEdit);
+    } else {
+      Alert.alert("Erro", "Rotina não encontrada.");
+      router.back();
+    }
+  }, [id, routines]);
 
   const handleSave = async (routineData: Omit<Routine, 'id' | 'progress' | 'isCompleted'>) => {
     if (routine) {

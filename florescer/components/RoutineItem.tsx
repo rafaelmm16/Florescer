@@ -1,6 +1,4 @@
-// florescer/components/RoutineItem.tsx
-
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { View, StyleSheet, Alert, Pressable, Animated } from 'react-native';
 import { Text, IconButton } from 'react-native-paper';
 import { useRouter } from 'expo-router';
@@ -8,29 +6,13 @@ import { Routine } from '../types/routine';
 import { useTheme } from './ThemeContext';
 import { SvgXml } from 'react-native-svg';
 
-// SVGs convertidos para uso no React Native
-const LightningIcon = () => {
-    const { theme } = useTheme();
-    return (
-        <SvgXml
-            width={48}
-            height={48}
-            xml={`<svg width="48" viewBox="0 -960 960 960" height="48" xmlns="http://www.w3.org/2000/svg"><path fill="${theme.colors.onSurface}" d="m393-165 279-335H492l36-286-253 366h154l-36 255Zm-73 85 40-280H160l360-520h80l-40 320h240L400-80h-80Zm153-395Z" /></svg>`}
-        />
-    );
-};
-
-const OptionsIcon = () => {
-    const { theme } = useTheme();
-    return (
-        <SvgXml
-            width={32}
-            height={32}
-            xml={`<svg width="32" viewBox="0 -960 960 960" height="32" xmlns="http://www.w3.org/2000/svg"><path fill="${theme.colors.onSurface}" d="M226-160q-28 0-47-19t-19-47q0-28 19-47t47-19q28 0 47 19t19 47q0 28-19 47t-47 19Zm254 0q-28 0-47-19t-19-47q0-28 19-47t47-19q28 0 47 19t19 47q0 28-19 47t-47 19Zm254 0q-28 0-47-19t-19-47q0-28 19-47t47-19q28 0 47 19t19 47q0 28-19 47t-47 19ZM226-414q-28 0-47-19t-19-47q0-28 19-47t47-19q28 0 47 19t19 47q0 28-19 47t-47 19Zm254 0q-28 0-47-19t-19-47q0-28 19-47t47-19q28 0 47 19t19 47q0 28-19 47t-47 19Zm254 0q-28 0-47-19t-19-47q0-28 19-47t47-19q28 0 47 19t19 47q0 28-19 47t-47 19ZM226-668q-28 0-47-19t-19-47q0-28 19-47t47-19q28 0 47 19t19 47q0 28-19 47t-47 19Zm254 0q-28 0-47-19t-19-47q0-28 19-47t47-19q28 0 47 19t19 47q0 28-19 47t-47 19Zm254 0q-28 0-47-19t-19-47q0-28 19-47t47-19q28 0 47 19t19 47q0 28-19 47t-47 19Z" /></svg>`}
-        />
-    );
-};
-
+const OptionsIcon = ({ color }: { color: string }) => (
+  <SvgXml
+    width={24}
+    height={24}
+    xml={`<svg width="24" viewBox="0 -960 960 960" height="24" xmlns="http://www.w3.org/2000/svg"><path fill="${color}" d="M226-160q-28 0-47-19t-19-47q0-28 19-47t47-19q28 0 47 19t19 47q0 28-19 47t-47 19Zm254 0q-28 0-47-19t-19-47q0-28 19-47t47-19q28 0 47 19t19 47q0 28-19 47t-47 19Zm254 0q-28 0-47-19t-19-47q0-28 19-47t47-19q28 0 47 19t19 47q0 28-19 47t-47 19ZM226-414q-28 0-47-19t-19-47q0-28 19-47t47-19q28 0 47 19t19 47q0 28-19 47t-47 19Zm254 0q-28 0-47-19t-19-47q0-28 19-47t47-19q28 0 47 19t19 47q0 28-19 47t-47 19Zm254 0q-28 0-47-19t-19-47q0-28 19-47t47-19q28 0 47 19t19 47q0 28-19 47t-47 19ZM226-668q-28 0-47-19t-19-47q0-28 19-47t47-19q28 0 47 19t19 47q0 28-19 47t-47 19Zm254 0q-28 0-47-19t-19-47q0-28 19-47t47-19q28 0 47 19t19 47q0 28-19 47t-47 19Zm254 0q-28 0-47-19t-19-47q0-28 19-47t47-19q28 0 47 19t19 47q0 28-19 47t-47 19Z" /></svg>`}
+  />
+);
 
 interface RoutineItemProps {
   routine: Routine;
@@ -47,8 +29,17 @@ export default function RoutineItem({ routine, onUpdate, onDelete, drag, isActiv
   const router = useRouter();
   const { theme } = useTheme();
 
-  // Animação para o efeito de "hover"
-  const scaleValue = React.useRef(new Animated.Value(1)).current;
+  const scaleValue = useRef(new Animated.Value(1)).current;
+  const progressWidth = useRef(new Animated.Value(routine.progress / routine.goal)).current;
+
+  useEffect(() => {
+    Animated.spring(progressWidth, {
+      toValue: routine.progress / routine.goal,
+      useNativeDriver: false,
+      friction: 8,
+      tension: 40,
+    }).start();
+  }, [routine.progress, routine.goal]);
 
   const handlePressIn = () => {
     Animated.spring(scaleValue, {
@@ -60,12 +51,11 @@ export default function RoutineItem({ routine, onUpdate, onDelete, drag, isActiv
   const handlePressOut = () => {
     Animated.spring(scaleValue, {
       toValue: 1,
-      friction: 3,
+      friction: 5,
       tension: 40,
       useNativeDriver: true,
     }).start();
   };
-
 
   const handleSetCompleted = () => {
     const updatedRoutine = { ...routine, progress: routine.goal, isCompleted: true };
@@ -80,14 +70,10 @@ export default function RoutineItem({ routine, onUpdate, onDelete, drag, isActiv
   const handleDeleteConfirmation = () => {
     Alert.alert(
       "Excluir Rotina",
-      `Tem certeza que deseja excluir a rotina "${routine.name}"? Esta ação não pode ser desfeita.`,
+      `Tem certeza que deseja excluir a rotina "${routine.name}"?`,
       [
         { text: "Cancelar", style: "cancel" },
-        {
-          text: "Excluir",
-          onPress: () => onDelete(routine.id),
-          style: "destructive",
-        },
+        { text: "Excluir", onPress: () => onDelete(routine.id), style: "destructive" },
       ]
     );
   };
@@ -96,18 +82,20 @@ export default function RoutineItem({ routine, onUpdate, onDelete, drag, isActiv
     if (routine.progress < routine.goal) {
       const newProgress = routine.progress + 1;
       const isNowCompleted = newProgress === routine.goal;
-      const updatedRoutine = { ...routine, progress: newProgress, isCompleted: isNowCompleted };
-      onUpdate(updatedRoutine);
+      onUpdate({ ...routine, progress: newProgress, isCompleted: isNowCompleted });
     }
   };
 
   const handleDecrement = () => {
     if (routine.progress > 0) {
-      const updatedRoutine = { ...routine, progress: routine.progress - 1 };
-      onUpdate(updatedRoutine);
+      onUpdate({ ...routine, progress: routine.progress - 1 });
     }
   };
 
+  const progressPercent = progressWidth.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0%', '100%'],
+  });
 
   return (
     <Pressable
@@ -117,27 +105,43 @@ export default function RoutineItem({ routine, onUpdate, onDelete, drag, isActiv
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
     >
-      <Animated.View style={[styles.card, { transform: [{ scale: scaleValue }] }]}>
-        <View style={styles.cardImage}>
-          <LightningIcon />
-        </View>
-        <View style={styles.cardContent}>
-          <View style={styles.cardTop}>
-            <Text style={styles.cardTitle}>{`0${index + 1}.`}</Text>
-            <Text style={styles.cardText}>{routine.name}</Text>
+      <Animated.View style={[
+        styles.card, 
+        { 
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.surfaceVariant,
+          transform: [{ scale: scaleValue }],
+          shadowColor: theme.colors.shadow,
+        }
+      ]}>
+        <View style={styles.cardHeader}>
+          <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
+            {routine.name}
+          </Text>
+          <View style={[styles.badge, { backgroundColor: theme.colors.primaryContainer }]}>
+            <Text style={[styles.badgeText, { color: theme.colors.primary }]}>
+              {routine.progress} / {routine.goal}
+            </Text>
           </View>
-          <View style={styles.cardBottom}>
-            <Text style={styles.cardText}>{`${routine.progress}/${routine.goal}`}</Text>
-            <OptionsIcon />
-          </View>
         </View>
-        {isExpanded && (
-          <View style={styles.expandedView}>
-            <IconButton icon="minus" onPress={handleDecrement} />
-            <IconButton icon="plus" onPress={handleIncrement} />
-            <IconButton icon="check" onPress={handleSetCompleted} />
-            <IconButton icon="pencil" onPress={handleEdit} />
-            <IconButton icon="delete" onPress={handleDeleteConfirmation} />
+
+        <View style={[styles.progressBarBackground, { backgroundColor: theme.colors.surfaceVariant }]}>
+          <Animated.View style={[
+            styles.progressBarFill, 
+            { 
+              backgroundColor: theme.colors.primary,
+              width: progressPercent 
+            }
+          ]} />
+        </View>
+
+        {isExpanded && !routine.isCompleted && (
+          <View style={styles.expandedOptions}>
+            <IconButton icon="minus" size={20} iconColor={theme.colors.onSurfaceVariant} onPress={handleDecrement} />
+            <IconButton icon="plus" size={20} iconColor={theme.colors.primary} onPress={handleIncrement} />
+            <IconButton icon="check" size={20} iconColor={theme.colors.success} onPress={handleSetCompleted} />
+            <IconButton icon="pencil" size={20} iconColor={theme.colors.onSurfaceVariant} onPress={handleEdit} />
+            <IconButton icon="delete" size={20} iconColor={theme.colors.danger} onPress={handleDeleteConfirmation} />
           </View>
         )}
       </Animated.View>
@@ -147,52 +151,54 @@ export default function RoutineItem({ routine, onUpdate, onDelete, drag, isActiv
 
 const styles = StyleSheet.create({
   card: {
-    width: 320,
-    backgroundColor: '#fff480',
-    borderRadius: 30,
-    padding: 24,
-    marginVertical: 8,
-    alignSelf: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    width: '100%',
+    borderRadius: 20,
+    padding: 20,
+    marginVertical: 10,
+    borderWidth: 1,
+    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
   },
-  cardContent: {
-    justifyContent: 'space-between',
-    height: 120,
-  },
-  cardTop: {
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-  },
-  cardBottom: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   cardTitle: {
-    fontWeight: 'bold',
-    color: 'black',
+    fontSize: 18,
+    fontWeight: '700',
+    flex: 1,
   },
-  cardText: {
-    fontWeight: '600',
-    color: 'black',
+  badge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginLeft: 12,
   },
-  cardImage: {
-    position: 'absolute',
+  badgeText: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  progressBarBackground: {
+    height: 8,
+    borderRadius: 4,
     width: '100%',
-    height: '100%',
-    top: 0,
-    left: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    pointerEvents: 'none',
+    overflow: 'hidden',
   },
-  expandedView: {
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  expandedOptions: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 10,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
   },
 });

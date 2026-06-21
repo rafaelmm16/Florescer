@@ -1,10 +1,9 @@
-// florescer/app/new.tsx
 import React from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Routine } from '../types/routine';
-import { addRoutine } from '../utils/storage';
+import { useRoutineStore } from '../store/useRoutineStore';
 import RoutineForm from '../components/RoutineForm';
 import Header from '../components/Header';
 import { useTheme } from '../components/ThemeContext';
@@ -12,11 +11,18 @@ import { useTheme } from '../components/ThemeContext';
 export default function NewRoutineScreen() {
     const router = useRouter();
     const { theme } = useTheme();
+    const { addRoutine } = useRoutineStore();
 
     const handleSave = async (routineData: Omit<Routine, 'id' | 'progress' | 'isCompleted'>) => {
         try {
-            await addRoutine(routineData);
-            Alert.alert("Sucesso", "Nova rotina criada!");
+            const newRoutine: Routine = {
+                id: Date.now().toString(),
+                ...routineData,
+                progress: 0,
+                isCompleted: false,
+            };
+            await addRoutine(newRoutine);
+            Alert.alert("Sucesso", "Nova rotina criada com sucesso! 🌱");
             router.back();
         } catch (e) {
             console.error("Failed to save new routine.", e);

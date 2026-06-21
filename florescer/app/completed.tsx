@@ -1,53 +1,36 @@
-// app/completed.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { View, StyleSheet, FlatList, Text } from 'react-native';
-import { useIsFocused } from '@react-navigation/native';
-import { getRoutines, updateRoutine, deleteRoutine } from '../utils/storage';
+import { useFocusEffect } from 'expo-router';
+import { useRoutineStore } from '../store/useRoutineStore';
 import RoutineItem from '../components/RoutineItem';
-import { Routine } from '../types/routine';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import { useTheme } from '../components/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function CompletedScreen() {
-    const [completedRoutines, setCompletedRoutines] = useState<Routine[]>([]);
     const { theme } = useTheme();
-    const isFocused = useIsFocused();
+    const { routines, loadRoutines, updateRoutine, deleteRoutine } = useRoutineStore();
+    
+    const completedRoutines = routines.filter(r => r.isCompleted);
 
-    const loadCompletedRoutines = async () => {
-        const allRoutines = await getRoutines();
-        const filteredRoutines = allRoutines.filter(r => r.isCompleted);
-        setCompletedRoutines(filteredRoutines);
-    };
-
-    useEffect(() => {
-        if (isFocused) {
-            loadCompletedRoutines();
-        }
-    }, [isFocused]);
-
-    const handleUpdateCompletedRoutine = async (updatedRoutine: Routine) => {
-        await updateRoutine(updatedRoutine);
-        loadCompletedRoutines();
-    };
-
-    const handleDeleteRoutine = async (id: string) => {
-        await deleteRoutine(id);
-        loadCompletedRoutines();
-    };
+    useFocusEffect(
+        useCallback(() => {
+            loadRoutines();
+        }, [])
+    );
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <Header title="Rotinas Concluídas" />
+            <Header title="Concluídos" subtitle="Seu histórico de conquistas" />
             <FlatList
                 data={completedRoutines}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item, index }) => (
                     <RoutineItem
                         routine={item}
-                        onUpdate={handleUpdateCompletedRoutine}
-                        onDelete={handleDeleteRoutine}
+                        onUpdate={updateRoutine}
+                        onDelete={deleteRoutine}
                         isExpanded={false}
                         onExpandToggle={() => {}}
                         index={index}
@@ -56,7 +39,10 @@ export default function CompletedScreen() {
                 contentContainerStyle={styles.list}
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>Nenhuma rotina concluída.</Text>
+                        <Text style={[styles.emptyTitle, { color: theme.colors.onSurface }]}>Nenhuma rotina concluída</Text>
+                        <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>
+                            Complete seus hábitos diários para vê-los aqui.
+                        </Text>
                     </View>
                 }
             />
@@ -70,17 +56,23 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     list: {
-        padding: 8,
-        paddingBottom: 80,
+        paddingHorizontal: 24,
+        paddingBottom: 120, // Space for navbar
     },
     emptyContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 50,
+        marginTop: 80,
+    },
+    emptyTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        marginBottom: 8,
     },
     emptyText: {
-        fontSize: 18,
-        marginBottom: 20,
+        fontSize: 16,
+        textAlign: 'center',
+        paddingHorizontal: 32,
     },
 });

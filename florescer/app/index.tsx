@@ -1,13 +1,11 @@
-// app/index.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useIsFocused } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
-import { Button } from 'react-native-paper'; // Removido o FAB
+import { useFocusEffect, useRouter } from 'expo-router';
+import { Button } from 'react-native-paper';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import { Routine } from '../types/routine';
-import { getRoutines, updateRoutine, deleteRoutine, saveRoutines } from '../utils/storage';
+import { useRoutineStore } from '../store/useRoutineStore';
 import RoutineItem from '../components/RoutineItem';
 import Navbar from '../components/Navbar';
 import Header from '../components/Header';
@@ -17,24 +15,18 @@ import NewRoutineButton from '../components/NewRoutineButton';
 export default function HomeScreen() {
   const router = useRouter();
   const { theme } = useTheme();
-  const [routines, setRoutines] = useState<Routine[]>([]);
-  // Novo estado para controlar os cards expandidos
+  
+  const { routines, loadRoutines, updateRoutine, deleteRoutine, reorderRoutines } = useRoutineStore();
+  const activeRoutines = routines.filter(r => !r.isCompleted);
+
   const [expandedRoutines, setExpandedRoutines] = useState<Set<string>>(new Set());
-  const isFocused = useIsFocused();
 
-  const loadRoutines = async () => {
-    const allRoutines = await getRoutines();
-    const activeRoutines = allRoutines.filter(r => !r.isCompleted);
-    setRoutines(activeRoutines);
-  };
-
-  useEffect(() => {
-    if (isFocused) {
+  useFocusEffect(
+    useCallback(() => {
       loadRoutines();
-    }
-  }, [isFocused]);
+    }, [])
+  );
 
-  // Função para alternar a expansão de um card
   const toggleExpandRoutine = (id: string) => {
     setExpandedRoutines(currentExpanded => {
       const newExpanded = new Set(currentExpanded);
@@ -49,28 +41,15 @@ export default function HomeScreen() {
 
   const handleUpdateRoutine = async (updatedRoutine: Routine) => {
     await updateRoutine(updatedRoutine);
-
-    if (updatedRoutine.isCompleted) {
-      setRoutines(currentRoutines =>
-        currentRoutines.filter(r => r.id !== updatedRoutine.id)
-      );
-    } else {
-      setRoutines(currentRoutines =>
-        currentRoutines.map(r => (r.id === updatedRoutine.id ? updatedRoutine : r))
-      );
-    }
   };
 
   const handleDeleteRoutine = async (id: string) => {
     await deleteRoutine(id);
-    setRoutines(prevRoutines => prevRoutines.filter(routine => routine.id !== id));
   };
 
   const handleDragEnd = async ({ data }: { data: Routine[] }) => {
-    setRoutines(data);
-    const allRoutines = await getRoutines();
-    const completedRoutines = allRoutines.filter(r => r.isCompleted);
-    await saveRoutines([...data, ...completedRoutines]);
+    const completedRoutines = routines.filter(r => r.isCompleted);
+    await reorderRoutines([...data, ...completedRoutines]);
   };
 
   const renderItem = useCallback(({ item, drag, isActive }: RenderItemParams<Routine>) => {
@@ -83,24 +62,37 @@ export default function HomeScreen() {
         isActive={isActive}
         isExpanded={expandedRoutines.has(item.id)}
         onExpandToggle={() => toggleExpandRoutine(item.id)}
+        index={activeRoutines.findIndex(r => r.id === item.id)}
       />
     );
-  }, [handleUpdateRoutine, handleDeleteRoutine, expandedRoutines]);
+  }, [expandedRoutines, activeRoutines]);
+
+  const today = new Intl.DateTimeFormat('pt-BR', { 
+    weekday: 'long', 
+    day: 'numeric', 
+    month: 'long' 
+  }).format(new Date());
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Header title="Minhas Rotinas" />
+      <Header title="Minhas Rotinas" subtitle={today} />
       <DraggableFlatList
-        data={routines}
+        data={activeRoutines}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         onDragEnd={handleDragEnd}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>Nenhuma rotina por aqui.</Text>
-            <Button mode="contained" onPress={() => router.push('/new')}>
-              Crie a sua primeira rotina!
+            <Text style={[styles.emptyTitle, { color: theme.colors.onSurface }]}>Tudo limpo por aqui!</Text>
+            <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>Que tal adicionar um novo hábito para hoje?</Text>
+            <Button 
+              mode="contained" 
+              onPress={() => router.push('/new')}
+              buttonColor={theme.colors.primary}
+              style={styles.emptyButton}
+            >
+              Criar Rotina
             </Button>
           </View>
         }
@@ -118,17 +110,28 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   list: {
-    padding: 8,
-    paddingBottom: 80,
+    paddingHorizontal: 24,
+    paddingBottom: 120, // Extra space for navbar and FAB
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 50,
+    marginTop: 80,
+    paddingHorizontal: 20,
+  },
+  emptyTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 8,
   },
   emptyText: {
-    fontSize: 18,
-    marginBottom: 20,
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 24,
   },
+  emptyButton: {
+    borderRadius: 12,
+    paddingHorizontal: 12,
+  }
 });

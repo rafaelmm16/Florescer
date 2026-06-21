@@ -4,17 +4,14 @@ import { Link, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from './ThemeContext';
 
-// A custom animated TouchableOpacity for the button press effect
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
-// Reusable NavButton component
 const NavButton = ({ href, iconName, isActive }: { href: string, iconName: any, isActive: boolean }) => {
   const { theme } = useTheme();
   const translateY = useRef(new Animated.Value(0)).current;
 
   const iconColor = isActive ? theme.colors.primary : theme.colors.onSurfaceVariant;
 
-  // Simple debounce implementation
   const debounce = (func: Function, delay: number) => {
     let timeout: ReturnType<typeof setTimeout>;
     return (...args: any) => {
@@ -27,12 +24,12 @@ const NavButton = ({ href, iconName, isActive }: { href: string, iconName: any, 
     debounce(() => {
       translateY.stopAnimation(() => {
         Animated.timing(translateY, {
-          toValue: -3,
+          toValue: -4,
           duration: 150,
-          useNativeDriver: false,
+          useNativeDriver: true,
         }).start();
       });
-    }, 50), // 50ms debounce
+    }, 50),
     []
   );
 
@@ -41,12 +38,12 @@ const NavButton = ({ href, iconName, isActive }: { href: string, iconName: any, 
       translateY.stopAnimation(() => {
         Animated.spring(translateY, {
           toValue: 0,
-          friction: 5,
+          friction: 4,
           tension: 40,
-          useNativeDriver: false,
+          useNativeDriver: true,
         }).start();
       });
-    }, 50), // 50ms debounce
+    }, 50),
     []
   );
 
@@ -55,13 +52,16 @@ const NavButton = ({ href, iconName, isActive }: { href: string, iconName: any, 
       <AnimatedTouchableOpacity
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        style={[styles.button, { transform: [{ translateY }] }]}
+        style={StyleSheet.flatten([styles.button, { transform: [{ translateY }] }])}
       >
         <Ionicons
           name={isActive ? iconName : `${iconName}-outline`}
-          size={25}
+          size={28}
           color={iconColor}
         />
+        {isActive && (
+          <View style={[styles.activeDot, { backgroundColor: theme.colors.primary }]} />
+        )}
       </AnimatedTouchableOpacity>
     </Link>
   );
@@ -80,7 +80,14 @@ export default function Navbar() {
 
   return (
     <View style={styles.navbarWrapper}>
-      <View style={[styles.buttonContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}>
+      <View style={[
+        styles.buttonContainer, 
+        { 
+          backgroundColor: theme.colors.surface, 
+          borderColor: theme.colors.surfaceVariant,
+          shadowColor: theme.colors.shadow,
+        }
+      ]}>
         {navItems.map((item) => (
           <NavButton
             key={item.href}
@@ -101,30 +108,36 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
-    paddingBottom: 20, // Safe area for home indicator
+    paddingBottom: 24, 
   },
   buttonContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    width: '80%',
-    maxWidth: 300,
-    height: 70,
-    borderRadius: 5, // As per your CSS example
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    width: '75%',
+    maxWidth: 320,
+    height: 72,
+    borderRadius: 36, 
+    elevation: 10,
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    paddingHorizontal: 10,
+    shadowRadius: 15,
+    paddingHorizontal: 16,
     borderWidth: 1,
   },
   button: {
-    width: 40,
-    height: 40,
-    borderRadius: 20, // Makes it circular
+    width: 50,
+    height: 50,
+    borderRadius: 25, 
     backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  activeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    position: 'absolute',
+    bottom: 2,
+  }
 });
