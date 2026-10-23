@@ -29,8 +29,13 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
-.env*.local
+# Environment & Credentials (nunca comitar no Git/GitHub)
+.env
+.env.*
+*.env
+!.env.example
+atlas-credentials.env
+credentials.json
 
 # typescript
 *.tsbuildinfo

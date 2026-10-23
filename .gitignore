@@ -1,0 +1,9 @@
+# Environment & Credentials (nunca comitar no Git/GitHub)
+.env
+.env.*
+*.env
+!.env.example
+atlas-credentials.env
+credentials.json
+node_modules/
+.DS_Store

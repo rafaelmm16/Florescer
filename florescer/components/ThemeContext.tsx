@@ -61,7 +61,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <PaperProvider theme={currentTheme}>
+    <PaperProvider theme={currentTheme as any}>
       <ThemeContext.Provider value={{ theme: currentTheme, isDark, toggleTheme }}>
         {children}
       </ThemeContext.Provider>

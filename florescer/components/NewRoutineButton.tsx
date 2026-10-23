@@ -1,17 +1,9 @@
 import React, { useRef } from 'react';
-import { TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { TouchableOpacity, StyleSheet, Animated, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SvgXml } from 'react-native-svg';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from './ThemeContext';
-
-const PlusIcon = () => (
-  <SvgXml
-    width={28}
-    height={28}
-    xml={`<svg fill="white" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>`}
-  />
-);
+import LiquidBubble from './LiquidBubble';
 
 export default function NewRoutineButton() {
   const router = useRouter();
@@ -21,24 +13,22 @@ export default function NewRoutineButton() {
   const handlePress = () => {
     router.push('/new');
   };
-  
+
   const handlePressIn = () => {
     Animated.spring(scaleValue, {
-      toValue: 0.9,
-      useNativeDriver: true,
-    }).start();
-  };
-  
-  const handlePressOut = () => {
-    Animated.spring(scaleValue, {
-      toValue: 1,
-      friction: 5,
-      tension: 40,
+      toValue: 0.88,
       useNativeDriver: true,
     }).start();
   };
 
-  const containerAnimatedStyle = { transform: [{ scale: scaleValue }] };
+  const handlePressOut = () => {
+    Animated.spring(scaleValue, {
+      toValue: 1,
+      friction: 4,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  };
 
   return (
     <TouchableOpacity
@@ -46,43 +36,41 @@ export default function NewRoutineButton() {
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       activeOpacity={0.9}
-      style={styles.container}
+      style={styles.floatingContainer}
+      accessibilityLabel="Criar nova rotina"
     >
-      <Animated.View style={[styles.buttonContainer, containerAnimatedStyle, { shadowColor: theme.colors.primary }]}>
-        <LinearGradient 
-          colors={[theme.colors.primary, theme.colors.primaryContainer]} 
-          start={{x: 0, y: 0}}
-          end={{x: 1, y: 1}}
-          style={styles.gradient}
-        >
-          <PlusIcon />
-        </LinearGradient>
+      <Animated.View
+        style={[
+          styles.fabWrapper,
+          {
+            transform: [{ scale: scaleValue }],
+            shadowColor: theme.colors.primary,
+          },
+        ]}
+      >
+        {/* Luminous Vibrant Turquoise Spherical Liquid Glass Bubble */}
+        <LiquidBubble size={62} colorTheme="turquoise">
+          <Ionicons name="add" size={32} color="#FFFFFF" />
+        </LiquidBubble>
       </Animated.View>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  floatingContainer: {
     position: 'absolute',
-    margin: 24,
-    right: 0,
-    bottom: 90,
+    right: 22,
+    bottom: Platform.OS === 'ios' ? 104 : 96,
+    zIndex: 90,
   },
-  buttonContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    elevation: 8,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-  },
-  gradient: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
+  fabWrapper: {
+    width: 62,
+    height: 62,
+    borderRadius: 31,
+    elevation: 12,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.50,
+    shadowRadius: 22,
   },
 });

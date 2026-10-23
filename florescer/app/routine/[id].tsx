@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { StyleSheet, Alert, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Routine } from '../../types/routine';
@@ -7,21 +7,22 @@ import { useRoutineStore } from '../../store/useRoutineStore';
 import RoutineForm from '../../components/RoutineForm';
 import Header from '../../components/Header';
 import { useTheme } from '../../components/ThemeContext';
+import GlassBackground from '../../components/GlassBackground';
 
 export default function EditRoutineScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { theme } = useTheme();
-  
+
   const { routines, updateRoutine } = useRoutineStore();
   const [routine, setRoutine] = useState<Routine | null>(null);
 
   useEffect(() => {
-    const routineToEdit = routines.find(r => r.id === id);
+    const routineToEdit = routines.find((r) => r.id === id);
     if (routineToEdit) {
       setRoutine(routineToEdit);
     } else {
-      Alert.alert("Erro", "Rotina não encontrada.");
+      Alert.alert('Erro', 'Rotina não encontrada.');
       router.back();
     }
   }, [id, routines]);
@@ -29,7 +30,7 @@ export default function EditRoutineScreen() {
   const handleSave = async (routineData: Omit<Routine, 'id' | 'progress' | 'isCompleted'>) => {
     if (routine) {
       if (routine.isCompleted) {
-        Alert.alert("Atenção", "Não é possível editar uma rotina já concluída.");
+        Alert.alert('Atenção', 'Não é possível editar uma rotina já concluída.');
         return;
       }
       const updatedRoutine = {
@@ -37,32 +38,39 @@ export default function EditRoutineScreen() {
         ...routineData,
       };
       await updateRoutine(updatedRoutine);
-      Alert.alert("Sucesso", "Rotina atualizada com sucesso!");
+      Alert.alert('Sucesso', 'Rotina atualizada com sucesso! ✨');
       router.back();
     }
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Header title="Editar Rotina" showBack onBack={() => router.back()} />
-      <View style={styles.content}>
-        {routine ? (
-          <RoutineForm
-            onSave={handleSave}
-            initialRoutine={routine}
-            disabled={routine.isCompleted}
-          />
-        ) : null}
-      </View>
-    </SafeAreaView>
+    <GlassBackground>
+      <SafeAreaView style={styles.safeArea}>
+        <Header
+          title="Editar Rotina"
+          subtitle="Ajustar Hábito"
+          showBack
+          onBack={() => router.back()}
+        />
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          {routine ? (
+            <RoutineForm
+              onSave={handleSave}
+              initialRoutine={routine}
+              disabled={routine.isCompleted}
+            />
+          ) : null}
+        </ScrollView>
+      </SafeAreaView>
+    </GlassBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
   },
   content: {
-    flex: 1,
+    paddingBottom: 40,
   },
 });

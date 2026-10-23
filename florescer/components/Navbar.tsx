@@ -1,102 +1,120 @@
-import React, { useRef, useCallback } from 'react';
-import { View, TouchableOpacity, StyleSheet, Animated } from 'react-native';
-import { Link, usePathname } from 'expo-router';
+import React, { useRef } from 'react';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+  Platform,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter, usePathname } from 'expo-router';
+import {
+  LiquidGlassView,
+  LiquidGlassContainerView,
+  isLiquidGlassSupported,
+} from '@callstack/liquid-glass';
 import { useTheme } from './ThemeContext';
+import LiquidBubble from './LiquidBubble';
 
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
-const NavButton = ({ href, iconName, isActive }: { href: string, iconName: any, isActive: boolean }) => {
-  const { theme } = useTheme();
-  const translateY = useRef(new Animated.Value(0)).current;
+interface NavButtonProps {
+  href: string;
+  iconName: keyof typeof Ionicons.glyphMap;
+  label: string;
+  isActive: boolean;
+}
 
-  const iconColor = isActive ? theme.colors.primary : theme.colors.onSurfaceVariant;
+const NavButton: React.FC<NavButtonProps> = ({ href, iconName, label, isActive }) => {
+  const router = useRouter();
+  const { isDark } = useTheme();
+  const scale = useRef(new Animated.Value(1)).current;
 
-  const debounce = (func: Function, delay: number) => {
-    let timeout: ReturnType<typeof setTimeout>;
-    return (...args: any) => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => func(...args), delay);
-    };
+  const handlePressIn = () => {
+    Animated.spring(scale, {
+      toValue: 0.9,
+      useNativeDriver: true,
+    }).start();
   };
 
-  const handlePressIn = useCallback(
-    debounce(() => {
-      translateY.stopAnimation(() => {
-        Animated.timing(translateY, {
-          toValue: -4,
-          duration: 150,
-          useNativeDriver: true,
-        }).start();
-      });
-    }, 50),
-    []
-  );
+  const handlePressOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      friction: 4,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  };
 
-  const handlePressOut = useCallback(
-    debounce(() => {
-      translateY.stopAnimation(() => {
-        Animated.spring(translateY, {
-          toValue: 0,
-          friction: 4,
-          tension: 40,
-          useNativeDriver: true,
-        }).start();
-      });
-    }, 50),
-    []
-  );
+  const handlePress = () => {
+    if (!isActive) {
+      router.push(href as any);
+    }
+  };
 
   return (
-    <Link href={href as any} asChild>
-      <AnimatedTouchableOpacity
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        style={StyleSheet.flatten([styles.button, { transform: [{ translateY }] }])}
-      >
-        <Ionicons
-          name={isActive ? iconName : `${iconName}-outline`}
-          size={28}
-          color={iconColor}
-        />
-        {isActive && (
-          <View style={[styles.activeDot, { backgroundColor: theme.colors.primary }]} />
-        )}
-      </AnimatedTouchableOpacity>
-    </Link>
+    <AnimatedTouchableOpacity
+      onPress={handlePress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      style={StyleSheet.flatten([styles.button, { transform: [{ scale }] }])}
+      activeOpacity={0.85}
+      accessibilityLabel={label}
+    >
+      {isActive ? (
+        <LiquidBubble size={46} colorTheme="turquoise" interactive>
+          <Ionicons name={iconName} size={22} color="#FFFFFF" />
+        </LiquidBubble>
+      ) : (
+        <View style={styles.inactiveIconWrapper}>
+          <Ionicons
+            name={(`${iconName}-outline` as any)}
+            size={22}
+            color={isDark ? 'rgba(147, 197, 253, 0.75)' : 'rgba(14, 116, 144, 0.75)'}
+          />
+        </View>
+      )}
+    </AnimatedTouchableOpacity>
   );
 };
 
-
 export default function Navbar() {
   const pathname = usePathname();
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
 
   const navItems = [
-    { href: '/', icon: 'home' },
-    { href: '/completed', icon: 'checkmark-done' },
-    { href: '/settings', icon: 'settings' },
+    { href: '/', icon: 'home' as const, label: 'Início' },
+    { href: '/completed', icon: 'trophy' as const, label: 'Concluídos' },
+    { href: '/settings', icon: 'person' as const, label: 'Perfil' },
   ];
 
   return (
-    <View style={styles.navbarWrapper}>
-      <View style={[
-        styles.buttonContainer, 
-        { 
-          backgroundColor: theme.colors.surface, 
-          borderColor: theme.colors.surfaceVariant,
-          shadowColor: theme.colors.shadow,
-        }
-      ]}>
-        {navItems.map((item) => (
-          <NavButton
-            key={item.href}
-            href={item.href}
-            iconName={item.icon}
-            isActive={pathname === item.href}
-          />
-        ))}
-      </View>
+    <View style={styles.navbarWrapper} pointerEvents="box-none">
+      <LiquidGlassContainerView spacing={16}>
+        <LiquidGlassView
+          effect="regular"
+          colorScheme={isDark ? 'dark' : 'light'}
+          style={[
+            styles.container,
+            {
+              shadowColor: isDark ? '#00F2FE' : theme.colors.shadow,
+            },
+            !isLiquidGlassSupported && (isDark ? styles.fallbackDark : styles.fallbackLight),
+          ]}
+        >
+          <View style={styles.buttonsRow}>
+            {navItems.map((item) => (
+              <NavButton
+                key={item.href}
+                href={item.href}
+                iconName={item.icon}
+                label={item.label}
+                isActive={pathname === item.href}
+              />
+            ))}
+          </View>
+        </LiquidGlassView>
+      </LiquidGlassContainerView>
     </View>
   );
 }
@@ -104,40 +122,68 @@ export default function Navbar() {
 const styles = StyleSheet.create({
   navbarWrapper: {
     position: 'absolute',
-    bottom: 0,
+    bottom: Platform.OS === 'ios' ? 24 : 18,
     left: 0,
     right: 0,
     alignItems: 'center',
-    paddingBottom: 24, 
+    justifyContent: 'center',
+    zIndex: 99,
   },
-  buttonContainer: {
+  container: {
+    width: '84%',
+    maxWidth: 340,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.22)',
+    elevation: 12,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.28,
+    shadowRadius: 20,
+    overflow: 'hidden',
+    justifyContent: 'center',
+  },
+  buttonsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    width: '75%',
-    maxWidth: 320,
-    height: 72,
-    borderRadius: 36, 
-    elevation: 10,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 15,
-    paddingHorizontal: 16,
-    borderWidth: 1,
+    paddingHorizontal: 8,
+    height: '100%',
   },
   button: {
-    width: 50,
-    height: 50,
-    borderRadius: 25, 
-    backgroundColor: 'transparent',
+    flex: 1,
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  activeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    position: 'absolute',
-    bottom: 2,
-  }
+  inactiveIconWrapper: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fallbackDark: {
+    backgroundColor: 'rgba(7, 21, 33, 0.78)',
+    borderColor: 'rgba(0, 242, 254, 0.30)',
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(28px) saturate(200%)',
+        WebkitBackdropFilter: 'blur(28px) saturate(200%)',
+        boxShadow:
+          '0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 1.5px rgba(255, 255, 255, 0.35)',
+      } as any,
+    }),
+  },
+  fallbackLight: {
+    backgroundColor: 'rgba(255, 255, 255, 0.82)',
+    borderColor: 'rgba(255, 255, 255, 0.90)',
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(24px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+        boxShadow:
+          '0 8px 32px rgba(8, 47, 73, 0.10), inset 0 1px 1.5px rgba(255, 255, 255, 0.85)',
+      } as any,
+    }),
+  },
 });

@@ -1,6 +1,6 @@
-// contador-de-habitos/utils/storage.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Routine } from '../types/routine';
+import { syncRoutinesToDatabase, fetchRoutinesFromDatabase } from '../services/database';
 
 const ROUTINES_KEY = '@routines';
 
@@ -8,7 +8,16 @@ const ROUTINES_KEY = '@routines';
 export const getRoutines = async (): Promise<Routine[]> => {
   try {
     const jsonValue = await AsyncStorage.getItem(ROUTINES_KEY);
-    return jsonValue != null ? JSON.parse(jsonValue) : [];
+    if (jsonValue != null) {
+      return JSON.parse(jsonValue);
+    }
+    // Try restoring from MongoDB Atlas if local is empty
+    const remote = await fetchRoutinesFromDatabase();
+    if (remote && remote.length > 0) {
+      await AsyncStorage.setItem(ROUTINES_KEY, JSON.stringify(remote));
+      return remote;
+    }
+    return [];
   } catch (e) {
     console.error('Failed to fetch routines.', e);
     return [];
@@ -20,6 +29,8 @@ export const saveRoutines = async (routines: Routine[]): Promise<void> => {
   try {
     const jsonValue = JSON.stringify(routines);
     await AsyncStorage.setItem(ROUTINES_KEY, jsonValue);
+    // Background sync to MongoDB Atlas
+    syncRoutinesToDatabase(routines).catch(() => {});
   } catch (e) {
     console.error('Failed to save routines.', e);
   }

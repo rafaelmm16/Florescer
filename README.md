@@ -37,18 +37,32 @@ cd florescer
 
 2. **Instale as dependências**
 ```bash
+cd florescer
 npm install
 ```
 
-3. **Execute o projeto**
+3. **Configure as Variáveis de Ambiente (MongoDB Atlas)**
+Copie o arquivo de exemplo e insira suas credenciais seguras:
+```bash
+cp .env.example .env
+```
+*(Nota: O arquivo `.env` já está no `.gitignore` e nunca será enviado para o GitHub).*
+
+4. **Inicie o servidor de sincronização em nuvem**
+```bash
+npm run server
+```
+
+5. **Execute o aplicativo**
 ```bash
 npx expo start
 ```
 
-4. **Abra no dispositivo**
+6. **Abra no dispositivo**
 - Use o aplicativo Expo Go no seu celular para escanear o QR Code
 - Ou pressione `a` para abrir no emulador Android
 - Ou pressione `i` para abrir no emulador iOS
+- Ou pressione `w` para abrir na Web
 
 
 ## 🎨 Design System
