@@ -10,6 +10,7 @@ import { useTheme } from '../components/ThemeContext';
 import GlassCard from '../components/GlassCard';
 import GlassBackground from '../components/GlassBackground';
 import ConsistencyHeatmap from '../components/ConsistencyHeatmap';
+import AchievementsGrid from '../components/AchievementsGrid';
 
 export default function CompletedScreen() {
   const { theme, isDark } = useTheme();
@@ -119,6 +120,9 @@ export default function CompletedScreen() {
 
               {/* Consistency Heatmap */}
               <ConsistencyHeatmap routines={routines} />
+
+              {/* Achievements & Badges Grid */}
+              <AchievementsGrid routines={routines} />
 
               {completedRoutines.length > 0 && (
                 <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>

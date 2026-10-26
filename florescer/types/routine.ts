@@ -14,4 +14,6 @@ export interface Routine {
   icon?: string;
   reminderTime?: string | null;
   notificationId?: string | null;
+  isPaused?: boolean;
+  notes?: { id: string; date: string; text: string }[];
 }

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,22 +12,39 @@ import { useTheme } from '../components/ThemeContext';
 import NewRoutineButton from '../components/NewRoutineButton';
 import GlassCard from '../components/GlassCard';
 import GlassBackground from '../components/GlassBackground';
+import { HABIT_CATEGORIES } from '../constants/categories';
+import HabitTimerModal from '../components/HabitTimerModal';
+import HabitNoteModal from '../components/HabitNoteModal';
+import { triggerLightHaptic } from '../utils/haptics';
+import { getTodayDateString } from '../utils/streak';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { theme, isDark } = useTheme();
 
   const { routines, loadRoutines, updateRoutine, deleteRoutine, reorderRoutines } = useRoutineStore();
-  const activeRoutines = routines.filter((r) => !r.isCompleted);
-  const completedCount = routines.filter((r) => r.isCompleted).length;
 
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [expandedRoutines, setExpandedRoutines] = useState<Set<string>>(new Set());
+
+  // Modals state
+  const [timerRoutine, setTimerRoutine] = useState<Routine | null>(null);
+  const [journalRoutine, setJournalRoutine] = useState<Routine | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       loadRoutines();
     }, [])
   );
+
+  const activeRoutines = routines.filter((r) => !r.isCompleted && !r.isPaused);
+  const pausedRoutines = routines.filter((r) => r.isPaused);
+  const completedCount = routines.filter((r) => r.isCompleted).length;
+
+  const filteredRoutines = activeRoutines.filter((r) => {
+    if (selectedCategory === 'all') return true;
+    return r.category === selectedCategory;
+  });
 
   const toggleExpandRoutine = (id: string) => {
     setExpandedRoutines((currentExpanded) => {
@@ -50,8 +67,38 @@ export default function HomeScreen() {
   };
 
   const handleDragEnd = async ({ data }: { data: Routine[] }) => {
-    const completedRoutines = routines.filter((r) => r.isCompleted);
-    await reorderRoutines([...data, ...completedRoutines]);
+    const unlistedRoutines = routines.filter(
+      (r) => r.isCompleted || r.isPaused || !data.some((d) => d.id === r.id)
+    );
+    await reorderRoutines([...data, ...unlistedRoutines]);
+  };
+
+  const handleTimerComplete = async (routine: Routine) => {
+    const newProgress = Math.min(routine.progress + 1, routine.goal);
+    const isNowCompleted = newProgress === routine.goal;
+    await updateRoutine({
+      ...routine,
+      progress: newProgress,
+      isCompleted: isNowCompleted,
+    });
+    setTimerRoutine(null);
+  };
+
+  const handleSaveNote = async (routineId: string, text: string) => {
+    const target = routines.find((r) => r.id === routineId);
+    if (!target) return;
+
+    const newNote = {
+      id: Date.now().toString(),
+      date: getTodayDateString(),
+      text,
+    };
+
+    const updatedNotes = [...(target.notes || []), newNote];
+    await updateRoutine({
+      ...target,
+      notes: updatedNotes,
+    });
   };
 
   const renderItem = useCallback(
@@ -61,15 +108,17 @@ export default function HomeScreen() {
           routine={item}
           onUpdate={handleUpdateRoutine}
           onDelete={handleDeleteRoutine}
+          onOpenTimer={(r) => setTimerRoutine(r)}
+          onOpenJournal={(r) => setJournalRoutine(r)}
           drag={drag}
           isActive={isActive}
           isExpanded={expandedRoutines.has(item.id)}
           onExpandToggle={() => toggleExpandRoutine(item.id)}
-          index={activeRoutines.findIndex((r) => r.id === item.id)}
+          index={filteredRoutines.findIndex((r) => r.id === item.id)}
         />
       );
     },
-    [expandedRoutines, activeRoutines]
+    [expandedRoutines, filteredRoutines]
   );
 
   const today = new Intl.DateTimeFormat('pt-BR', {
@@ -82,6 +131,8 @@ export default function HomeScreen() {
   const maxStreak = Math.max(0, ...routines.map((r) => r.streak || 0));
   const progressPercent =
     routines.length > 0 ? Math.round((completedCount / routines.length) * 100) : 0;
+
+  const activeFocusBorder = isDark ? '#38BDF8' : '#0F172A';
 
   return (
     <GlassBackground>
@@ -170,7 +221,7 @@ export default function HomeScreen() {
                   </View>
                 </View>
 
-                {/* Minimalist 3px Progress Line */}
+                {/* Minimalist Progress Line */}
                 <View
                   style={[
                     styles.progressTrack,
@@ -192,8 +243,115 @@ export default function HomeScreen() {
           </View>
         )}
 
+        {/* Category Horizontal Filter Pills */}
+        {routines.length > 0 && (
+          <View style={styles.categoryFilterWrapper}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoryFilterScroll}
+            >
+              {/* "Todos" Option */}
+              <TouchableOpacity
+                onPress={() => {
+                  triggerLightHaptic();
+                  setSelectedCategory('all');
+                }}
+                activeOpacity={0.7}
+                style={[
+                  styles.filterChip,
+                  {
+                    backgroundColor: selectedCategory === 'all'
+                      ? isDark
+                        ? '#38BDF8'
+                        : '#0F172A'
+                      : isDark
+                      ? 'rgba(255, 255, 255, 0.05)'
+                      : '#FFFFFF',
+                    borderColor: selectedCategory === 'all'
+                      ? isDark
+                        ? '#38BDF8'
+                        : '#0F172A'
+                      : isDark
+                      ? 'rgba(255, 255, 255, 0.08)'
+                      : '#E2E8F0',
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    {
+                      color: selectedCategory === 'all'
+                        ? isDark
+                          ? '#090D14'
+                          : '#FFFFFF'
+                        : theme.colors.onSurfaceVariant,
+                      fontWeight: selectedCategory === 'all' ? '700' : '500',
+                    },
+                  ]}
+                >
+                  Todos ({activeRoutines.length})
+                </Text>
+              </TouchableOpacity>
+
+              {/* Categories */}
+              {HABIT_CATEGORIES.map((cat) => {
+                const count = activeRoutines.filter((r) => r.category === cat.id).length;
+                const isSelected = selectedCategory === cat.id;
+
+                return (
+                  <TouchableOpacity
+                    key={cat.id}
+                    onPress={() => {
+                      triggerLightHaptic();
+                      setSelectedCategory(cat.id);
+                    }}
+                    activeOpacity={0.7}
+                    style={[
+                      styles.filterChip,
+                      {
+                        backgroundColor: isSelected
+                          ? isDark
+                            ? '#38BDF8'
+                            : '#0F172A'
+                          : isDark
+                          ? 'rgba(255, 255, 255, 0.05)'
+                          : '#FFFFFF',
+                        borderColor: isSelected
+                          ? isDark
+                            ? '#38BDF8'
+                            : '#0F172A'
+                          : isDark
+                          ? 'rgba(255, 255, 255, 0.08)'
+                          : '#E2E8F0',
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.filterChipText,
+                        {
+                          color: isSelected
+                            ? isDark
+                              ? '#090D14'
+                              : '#FFFFFF'
+                            : theme.colors.onSurfaceVariant,
+                          fontWeight: isSelected ? '700' : '500',
+                        },
+                      ]}
+                    >
+                      {cat.name.split(' ')[0]} {count > 0 ? `(${count})` : ''}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
+
         <DraggableFlatList
-          data={activeRoutines}
+          data={filteredRoutines}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           onDragEnd={handleDragEnd}
@@ -222,14 +380,18 @@ export default function HomeScreen() {
                       </View>
 
                       <Text style={[styles.emptyTitle, { color: theme.colors.onSurface }]}>
-                        Tudo pronto por hoje!
+                        {selectedCategory !== 'all'
+                          ? 'Nenhum hábito nesta categoria'
+                          : 'Tudo pronto por hoje!'}
                       </Text>
                       <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>
-                        Todos os seus hábitos de hoje foram concluídos. Continue consistente amanhã!
+                        {selectedCategory !== 'all'
+                          ? 'Mude o filtro ou crie um novo hábito para esta categoria.'
+                          : 'Todos os seus hábitos de hoje foram concluídos. Continue consistente amanhã!'}
                       </Text>
 
                       <TouchableOpacity
-                        onPress={() => router.push('/completed')}
+                        onPress={() => (selectedCategory !== 'all' ? setSelectedCategory('all') : router.push('/completed'))}
                         activeOpacity={0.8}
                         style={[
                           styles.emptyButton,
@@ -244,7 +406,7 @@ export default function HomeScreen() {
                             { color: isDark ? '#090D14' : '#FFFFFF' },
                           ]}
                         >
-                          Ver Histórico
+                          {selectedCategory !== 'all' ? 'Ver Todos os Hábitos' : 'Ver Histórico'}
                         </Text>
                       </TouchableOpacity>
                     </>
@@ -301,6 +463,22 @@ export default function HomeScreen() {
         />
 
         <NewRoutineButton />
+
+        {/* Timer Modal */}
+        <HabitTimerModal
+          visible={!!timerRoutine}
+          routine={timerRoutine}
+          onClose={() => setTimerRoutine(null)}
+          onTimerComplete={handleTimerComplete}
+        />
+
+        {/* Micro-Journaling Modal */}
+        <HabitNoteModal
+          visible={!!journalRoutine}
+          routine={journalRoutine}
+          onClose={() => setJournalRoutine(null)}
+          onSaveNote={handleSaveNote}
+        />
       </SafeAreaView>
     </GlassBackground>
   );
@@ -343,7 +521,7 @@ const styles = StyleSheet.create({
   },
   statsWrapper: {
     paddingHorizontal: 20,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   statsCard: {
     width: '100%',
@@ -386,8 +564,24 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 1.5,
   },
+  categoryFilterWrapper: {
+    marginBottom: 10,
+  },
+  categoryFilterScroll: {
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+  filterChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  filterChipText: {
+    fontSize: 12,
+  },
   emptyContainer: {
-    marginTop: 24,
+    marginTop: 20,
     alignItems: 'center',
   },
   emptyCard: {

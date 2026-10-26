@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { View, StyleSheet, Alert, Pressable, Animated, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, Alert, Pressable, Animated, TouchableOpacity } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,12 +7,15 @@ import { Routine } from '../types/routine';
 import { useTheme } from './ThemeContext';
 import GlassCard from './GlassCard';
 import { triggerLightHaptic, triggerSuccessHaptic, triggerWarningHaptic } from '../utils/haptics';
+import { playZenChime } from '../utils/sound';
 import { getCategoryById } from '../constants/categories';
 
 interface RoutineItemProps {
   routine: Routine;
   onUpdate: (routine: Routine) => void;
   onDelete: (id: string) => void;
+  onOpenTimer?: (routine: Routine) => void;
+  onOpenJournal?: (routine: Routine) => void;
   drag?: () => void;
   isActive?: boolean;
   isExpanded: boolean;
@@ -20,12 +23,12 @@ interface RoutineItemProps {
   index: number;
 }
 
-const weekDayLabels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-
 export default function RoutineItem({
   routine,
   onUpdate,
   onDelete,
+  onOpenTimer,
+  onOpenJournal,
   drag,
   isActive = false,
   isExpanded,
@@ -68,14 +71,21 @@ export default function RoutineItem({
     }).start();
   };
 
-  const handleToggleComplete = () => {
+  const handleToggleComplete = async () => {
     if (routine.isCompleted) {
       triggerLightHaptic();
       onUpdate({ ...routine, progress: 0, isCompleted: false });
     } else {
       triggerSuccessHaptic();
+      await playZenChime();
       onUpdate({ ...routine, progress: routine.goal, isCompleted: true });
     }
+  };
+
+  const handleTogglePause = () => {
+    triggerLightHaptic();
+    const newPaused = !routine.isPaused;
+    onUpdate({ ...routine, isPaused: newPaused });
   };
 
   const handleEdit = () => {
@@ -96,12 +106,13 @@ export default function RoutineItem({
     );
   };
 
-  const handleIncrement = () => {
+  const handleIncrement = async () => {
     if (routine.progress < routine.goal) {
       const newProgress = routine.progress + 1;
       const isNowCompleted = newProgress === routine.goal;
       if (isNowCompleted) {
         triggerSuccessHaptic();
+        await playZenChime();
       } else {
         triggerLightHaptic();
       }
@@ -123,6 +134,8 @@ export default function RoutineItem({
 
   const isComplete = routine.isCompleted || routine.progress >= routine.goal;
   const currentStreak = routine.streak || 0;
+  const isPaused = !!routine.isPaused;
+  const notesCount = Array.isArray(routine.notes) ? routine.notes.length : 0;
 
   return (
     <Pressable
@@ -134,7 +147,7 @@ export default function RoutineItem({
       disabled={isActive || routine.isCompleted}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      style={styles.pressable}
+      style={[styles.pressable, isPaused && { opacity: 0.65 }]}
     >
       <Animated.View style={{ transform: [{ scale: scaleValue }] }}>
         <GlassCard
@@ -144,6 +157,9 @@ export default function RoutineItem({
             isActive && styles.activeCard,
             isComplete && {
               borderColor: isDark ? 'rgba(52, 211, 153, 0.25)' : '#BBF7D0',
+            },
+            isPaused && {
+              borderStyle: 'dashed',
             },
           ]}
         >
@@ -175,7 +191,7 @@ export default function RoutineItem({
                 ]}
               >
                 <Ionicons
-                  name={isComplete ? 'checkmark' : routineIcon}
+                  name={isComplete ? 'checkmark' : isPaused ? 'pause' : routineIcon}
                   size={19}
                   color={isComplete ? (isDark ? '#34D399' : '#059669') : routineColor}
                 />
@@ -203,8 +219,18 @@ export default function RoutineItem({
                     {category.name}
                   </Text>
 
+                  {/* Paused badge */}
+                  {isPaused && (
+                    <View style={styles.metaItem}>
+                      <Text style={styles.metaDot}>•</Text>
+                      <Text style={[styles.pauseText, { color: theme.colors.onSurfaceVariant }]}>
+                        ⏸ Pausado
+                      </Text>
+                    </View>
+                  )}
+
                   {/* Streak */}
-                  {currentStreak > 0 && (
+                  {!isPaused && currentStreak > 0 && (
                     <View style={styles.metaItem}>
                       <Text style={styles.metaDot}>•</Text>
                       <Text style={[styles.streakText, { color: isDark ? '#FB923C' : '#EA580C' }]}>
@@ -219,6 +245,16 @@ export default function RoutineItem({
                       <Text style={styles.metaDot}>•</Text>
                       <Text style={[styles.reminderText, { color: theme.colors.onSurfaceVariant }]}>
                         {routine.reminderTime}
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* Notes count indicator */}
+                  {notesCount > 0 && (
+                    <View style={styles.metaItem}>
+                      <Text style={styles.metaDot}>•</Text>
+                      <Text style={[styles.reminderText, { color: theme.colors.onSurfaceVariant }]}>
+                        ✍️ {notesCount}
                       </Text>
                     </View>
                   )}
@@ -274,7 +310,7 @@ export default function RoutineItem({
               </TouchableOpacity>
             </View>
 
-            {/* Minimalist Progress Track (Subtle 3px line) */}
+            {/* Minimalist Progress Track (Subtle 3.5px line) */}
             <View
               style={[
                 styles.progressBarTrack,
@@ -302,6 +338,7 @@ export default function RoutineItem({
                   },
                 ]}
               >
+                {/* Counter controls */}
                 <View style={styles.quickCounterRow}>
                   <TouchableOpacity
                     onPress={handleDecrement}
@@ -334,7 +371,62 @@ export default function RoutineItem({
                   </TouchableOpacity>
                 </View>
 
+                {/* Additional Utilities: Timer, Journal, Pause, Edit, Delete */}
                 <View style={styles.actionIconsRow}>
+                  {/* Timer button */}
+                  {onOpenTimer && (
+                    <TouchableOpacity
+                      onPress={() => onOpenTimer(routine)}
+                      style={[
+                        styles.actionIconBtn,
+                        {
+                          backgroundColor: isDark ? 'rgba(56, 189, 248, 0.12)' : '#F0F9FF',
+                          borderColor: isDark ? 'rgba(56, 189, 248, 0.25)' : '#BAE6FD',
+                        },
+                      ]}
+                      accessibilityLabel="Abrir Timer"
+                    >
+                      <Ionicons name="timer-outline" size={15} color={isDark ? '#38BDF8' : '#0284C7'} />
+                    </TouchableOpacity>
+                  )}
+
+                  {/* Journal button */}
+                  {onOpenJournal && (
+                    <TouchableOpacity
+                      onPress={() => onOpenJournal(routine)}
+                      style={[
+                        styles.actionIconBtn,
+                        {
+                          backgroundColor: isDark ? 'rgba(168, 85, 247, 0.12)' : '#FAF5FF',
+                          borderColor: isDark ? 'rgba(168, 85, 247, 0.25)' : '#E9D5FF',
+                        },
+                      ]}
+                      accessibilityLabel="Diário de reflexão"
+                    >
+                      <Ionicons name="book-outline" size={15} color={isDark ? '#C084FC' : '#9333EA'} />
+                    </TouchableOpacity>
+                  )}
+
+                  {/* Pause / Unpause toggle */}
+                  <TouchableOpacity
+                    onPress={handleTogglePause}
+                    style={[
+                      styles.actionIconBtn,
+                      {
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F1F5F9',
+                        borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#E2E8F0',
+                      },
+                    ]}
+                    accessibilityLabel={isPaused ? 'Retomar Hábito' : 'Pausar Hábito'}
+                  >
+                    <Ionicons
+                      name={isPaused ? 'play-outline' : 'pause-outline'}
+                      size={15}
+                      color={theme.colors.onSurfaceVariant}
+                    />
+                  </TouchableOpacity>
+
+                  {/* Edit */}
                   <TouchableOpacity
                     onPress={handleEdit}
                     style={[
@@ -348,6 +440,7 @@ export default function RoutineItem({
                     <Ionicons name="pencil-outline" size={15} color={theme.colors.onSurfaceVariant} />
                   </TouchableOpacity>
 
+                  {/* Delete */}
                   <TouchableOpacity
                     onPress={handleDeleteConfirmation}
                     style={[
@@ -426,6 +519,10 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#94A3B8',
   },
+  pauseText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
   streakText: {
     fontSize: 12,
     fontWeight: '700',
@@ -486,7 +583,7 @@ const styles = StyleSheet.create({
   actionIconsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   actionIconBtn: {
     width: 32,

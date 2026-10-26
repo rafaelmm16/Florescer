@@ -17,6 +17,7 @@ interface RoutineFormProps {
     color: string;
     icon: string;
     reminderTime: string | null;
+    isPaused?: boolean;
   }) => void;
   initialRoutine?: Routine | null;
   disabled?: boolean;
@@ -44,6 +45,7 @@ export default function RoutineForm({ onSave, initialRoutine, disabled = false }
   const [category, setCategory] = useState<string>(initialRoutine?.category || initialCat.id);
   const [selectedColor, setSelectedColor] = useState<string>(initialRoutine?.color || initialCat.color);
   const [selectedIcon, setSelectedIcon] = useState<string>(initialRoutine?.icon || initialCat.icon);
+  const [isPaused, setIsPaused] = useState<boolean>(!!initialRoutine?.isPaused);
 
   // Reminder state
   const [reminderEnabled, setReminderEnabled] = useState<boolean>(!!initialRoutine?.reminderTime);
@@ -112,6 +114,7 @@ export default function RoutineForm({ onSave, initialRoutine, disabled = false }
       color: selectedColor,
       icon: selectedIcon,
       reminderTime: reminderEnabled ? reminderTime : null,
+      isPaused,
     });
   };
 
@@ -359,6 +362,46 @@ export default function RoutineForm({ onSave, initialRoutine, disabled = false }
               </View>
             </View>
           )}
+
+          {/* Pause / Vacation Mode Toggle */}
+          <View
+            style={[
+              styles.reminderRow,
+              { borderTopColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F1F5F9' },
+            ]}
+          >
+            <View style={{ flex: 1, paddingRight: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={[styles.fieldLabel, { marginBottom: 2, color: theme.colors.onSurface }]}>
+                  Modo Férias / Pausa
+                </Text>
+                {isPaused && (
+                  <View
+                    style={{
+                      backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                      paddingHorizontal: 6,
+                      paddingVertical: 2,
+                      borderRadius: 6,
+                    }}
+                  >
+                    <Text style={{ fontSize: 10, color: '#F59E0B', fontWeight: '700' }}>ATIVO</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={[styles.reminderSubtext, { color: theme.colors.onSurfaceVariant }]}>
+                Congela sua sequência sem quebrar o streak durante viagens ou pausas.
+              </Text>
+            </View>
+            <Switch
+              value={isPaused}
+              onValueChange={(val) => {
+                triggerLightHaptic();
+                setIsPaused(val);
+              }}
+              color={activeFocusBorder}
+              disabled={disabled}
+            />
+          </View>
 
           {/* Week Days Section */}
           <View style={styles.daysHeaderRow}>

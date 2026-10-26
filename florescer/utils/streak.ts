@@ -98,12 +98,13 @@ export function processDailyReset(routines: Routine[]): Routine[] {
     }
 
     // 3. If today is a new day:
-    // Check if the streak is still alive from past days
-    if (currentStreak > 0 && !isStreakAlive(r.lastCompletedDate, r.days || [0, 1, 2, 3, 4, 5, 6])) {
+    // Check if the streak is still alive from past days (if not paused)
+    if (!r.isPaused && currentStreak > 0 && !isStreakAlive(r.lastCompletedDate, r.days || [0, 1, 2, 3, 4, 5, 6])) {
       currentStreak = 0;
     }
 
     // Reset daily progress for the new day
+
     return {
       ...r,
       progress: 0,

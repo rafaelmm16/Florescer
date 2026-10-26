@@ -35,6 +35,7 @@ export default function EditRoutineScreen() {
     color: string;
     icon: string;
     reminderTime: string | null;
+    isPaused?: boolean;
   }) => {
     if (routine) {
       if (routine.isCompleted) {

@@ -25,6 +25,7 @@ export default function NewRoutineScreen() {
     color: string;
     icon: string;
     reminderTime: string | null;
+    isPaused?: boolean;
   }) => {
     try {
       const id = Date.now().toString();
@@ -50,6 +51,7 @@ export default function NewRoutineScreen() {
         bestStreak: 0,
         lastCompletedDate: null,
         completedDates: [],
+        isPaused: routineData.isPaused ?? false,
       };
 
       await addRoutine(newRoutine);
