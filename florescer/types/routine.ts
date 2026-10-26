@@ -5,4 +5,13 @@ export interface Routine {
   goal: number;
   progress: number;
   isCompleted: boolean;
-}
+  streak: number;
+  bestStreak: number;
+  lastCompletedDate?: string | null;
+  completedDates?: string[];
+  category?: string;
+  color?: string;
+  icon?: string;
+  reminderTime?: string | null;
+  notificationId?: string | null;
+}

@@ -14,12 +14,10 @@ import { Text } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../components/ThemeContext';
 import GlassCard from '../components/GlassCard';
 import GlassBackground from '../components/GlassBackground';
-import { LiquidGlassView, isLiquidGlassSupported } from '@callstack/liquid-glass';
 import { saveUserProfile, checkDatabaseHealth } from '../services/database';
 
 const BOTANICAL_PRESETS = [
@@ -48,7 +46,6 @@ export default function SetupProfileScreen() {
   });
 
   useEffect(() => {
-    // Check MongoDB Atlas status
     checkDatabaseHealth().then(setDbStatus);
   }, []);
 
@@ -61,7 +58,7 @@ export default function SetupProfileScreen() {
         quality: 0.8,
       });
 
-      if (!result.canceled && result.assets && result.assets[0]) {
+      if (!result.canceled && result.assets?.[0]) {
         setImageUri(result.assets[0].uri);
       }
     } catch (e) {
@@ -94,11 +91,10 @@ export default function SetupProfileScreen() {
       } else {
         Alert.alert(
           'Tudo Pronto! 🌱',
-          `Bem-vindo ao Florescer, ${name.trim()}! Seu perfil foi salvo com sucesso no seu dispositivo.`
+          `Bem-vindo ao Florescer, ${name.trim()}! Seu perfil foi salvo no seu dispositivo.`
         );
       }
 
-      // Navigate to Home screen
       router.replace('/');
     } catch (error) {
       console.error('Error saving profile:', error);
@@ -107,6 +103,10 @@ export default function SetupProfileScreen() {
       setIsSaving(false);
     }
   };
+
+  const activeFocusBorder = isDark ? '#38BDF8' : '#0F172A';
+  const buttonBg = isDark ? '#38BDF8' : '#0F172A';
+  const buttonTextColor = isDark ? '#090D14' : '#FFFFFF';
 
   return (
     <GlassBackground>
@@ -118,78 +118,69 @@ export default function SetupProfileScreen() {
         >
           {/* Welcome Header */}
           <View style={styles.header}>
-            <LiquidGlassView
-              effect="clear"
-              colorScheme={isDark ? 'dark' : 'light'}
-              tintColor={isDark ? 'rgba(0, 242, 254, 0.16)' : 'rgba(6, 182, 212, 0.12)'}
+            <View
               style={[
                 styles.badge,
                 {
-                  borderColor: isDark ? 'rgba(0, 242, 254, 0.35)' : 'rgba(6, 182, 212, 0.25)',
-                },
-                !isLiquidGlassSupported && {
-                  backgroundColor: isDark ? 'rgba(0, 242, 254, 0.16)' : 'rgba(6, 182, 212, 0.12)',
+                  backgroundColor: isDark ? 'rgba(56, 189, 248, 0.10)' : '#F1F5F9',
+                  borderColor: isDark ? 'rgba(56, 189, 248, 0.20)' : '#E2E8F0',
                 },
               ]}
             >
-              <Text style={[styles.badgeText, { color: theme.colors.primary }]}>
-                BEM-VINDO AO FLORESCER 🌱
+              <Text style={[styles.badgeText, { color: isDark ? '#38BDF8' : '#0F172A' }]}>
+                BOAS-VINDAS AO FLORESCER 🌱
               </Text>
-            </LiquidGlassView>
+            </View>
 
             <Text style={[styles.title, { color: theme.colors.onSurface }]}>
-              Vamos cultivar o seu perfil
+              Configure seu perfil
             </Text>
 
             <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-              Configure sua identidade para começar sua jornada de hábitos. Sem necessidade de criar senhas!
+              Defina como você deseja aparecer no aplicativo. Simples, rápido e local.
             </Text>
           </View>
 
-          {/* Avatar Card (Layered Frosted Glass) */}
-          <GlassCard borderRadius={24} layered={true} style={styles.card}>
+          {/* Avatar Card */}
+          <GlassCard borderRadius={18} style={styles.card}>
             <View style={styles.avatarCardContent}>
               <TouchableOpacity
                 onPress={handlePickImage}
-                activeOpacity={0.85}
+                activeOpacity={0.8}
                 style={styles.avatarTouchable}
                 accessibilityLabel="Escolher foto de perfil"
               >
                 <View
                   style={[
-                    styles.avatarGlowRing,
+                    styles.avatarRing,
                     {
-                      borderColor: isDark ? 'rgba(52, 211, 153, 0.50)' : 'rgba(16, 185, 129, 0.45)',
-                      backgroundColor: isDark ? 'rgba(22, 32, 50, 0.85)' : 'rgba(255, 255, 255, 0.90)',
-                      shadowColor: theme.colors.primary,
+                      borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#E2E8F0',
+                      backgroundColor: isDark ? '#111622' : '#F1F5F9',
                     },
                   ]}
                 >
                   {imageUri ? (
                     <Image source={{ uri: imageUri }} style={styles.avatarImage} />
                   ) : (
-                    <View
-                      style={[
-                        styles.avatarPlaceholder,
-                        {
-                          backgroundColor: isDark
-                            ? 'rgba(16, 185, 129, 0.20)'
-                            : 'rgba(16, 185, 129, 0.12)',
-                        },
-                      ]}
-                    >
-                      <Text style={styles.avatarEmoji}>{selectedEmoji}</Text>
-                    </View>
+                    <Text style={styles.avatarEmoji}>{selectedEmoji}</Text>
                   )}
 
-                  <View style={[styles.cameraBadge, { backgroundColor: theme.colors.primary }]}>
-                    <Ionicons name="camera" size={16} color="#FFFFFF" />
+                  <View
+                    style={[
+                      styles.cameraBadge,
+                      {
+                        backgroundColor: buttonBg,
+                        borderColor: isDark ? '#111622' : '#FFFFFF',
+                      },
+                    ]}
+                  >
+                    <Ionicons name="camera" size={13} color={buttonTextColor} />
                   </View>
                 </View>
               </TouchableOpacity>
 
               <Text style={[styles.avatarHint, { color: theme.colors.onSurfaceVariant }]}>
-                Toque no círculo para escolher uma foto da galeria ou selecione um ícone abaixo:
+                Toque para escolher da galeria ou selecione um ícone:
               </Text>
 
               {/* Preset Icon Chips */}
@@ -203,22 +194,22 @@ export default function SetupProfileScreen() {
                         setImageUri(null);
                         setSelectedEmoji(preset.emoji);
                       }}
-                      activeOpacity={0.8}
+                      activeOpacity={0.7}
                       style={[
                         styles.presetChip,
                         {
                           backgroundColor: isSelected
                             ? isDark
-                              ? 'rgba(16, 185, 129, 0.28)'
-                              : 'rgba(16, 185, 129, 0.18)'
+                              ? 'rgba(56, 189, 248, 0.12)'
+                              : 'rgba(15, 23, 42, 0.06)'
                             : isDark
-                            ? 'rgba(255, 255, 255, 0.06)'
-                            : 'rgba(255, 255, 255, 0.70)',
+                            ? 'rgba(255, 255, 255, 0.04)'
+                            : '#F8FAFC',
                           borderColor: isSelected
-                            ? theme.colors.primary
+                            ? activeFocusBorder
                             : isDark
-                            ? 'rgba(255, 255, 255, 0.10)'
-                            : 'rgba(226, 232, 240, 0.8)',
+                            ? 'rgba(255, 255, 255, 0.08)'
+                            : '#E2E8F0',
                         },
                       ]}
                     >
@@ -227,8 +218,8 @@ export default function SetupProfileScreen() {
                         style={[
                           styles.presetLabel,
                           {
-                            color: isSelected ? theme.colors.primary : theme.colors.onSurfaceVariant,
-                            fontWeight: isSelected ? '800' : '600',
+                            color: isSelected ? theme.colors.onSurface : theme.colors.onSurfaceVariant,
+                            fontWeight: isSelected ? '700' : '500',
                           },
                         ]}
                       >
@@ -242,7 +233,7 @@ export default function SetupProfileScreen() {
           </GlassCard>
 
           {/* Form Fields Card */}
-          <GlassCard borderRadius={24} style={styles.card}>
+          <GlassCard borderRadius={18} style={styles.card}>
             <View style={styles.formCardContent}>
               {/* Name Field */}
               <View style={styles.fieldWrapper}>
@@ -250,7 +241,7 @@ export default function SetupProfileScreen() {
                   <Text style={[styles.fieldLabel, { color: theme.colors.onSurface }]}>
                     Seu Nome *
                   </Text>
-                  <Text style={[styles.fieldRequired, { color: theme.colors.primary }]}>
+                  <Text style={[styles.fieldRequired, { color: isDark ? '#38BDF8' : '#0F172A' }]}>
                     Obrigatório
                   </Text>
                 </View>
@@ -258,21 +249,19 @@ export default function SetupProfileScreen() {
                   style={[
                     styles.inputContainer,
                     {
-                      backgroundColor: isDark
-                        ? 'rgba(10, 16, 28, 0.70)'
-                        : 'rgba(255, 255, 255, 0.75)',
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#F8FAFC',
                       borderColor: nameFocused
-                        ? theme.colors.primary
+                        ? activeFocusBorder
                         : isDark
-                        ? 'rgba(255, 255, 255, 0.12)'
-                        : 'rgba(226, 232, 240, 0.90)',
+                        ? 'rgba(255, 255, 255, 0.08)'
+                        : '#E2E8F0',
                     },
                   ]}
                 >
                   <Ionicons
                     name="person-outline"
-                    size={20}
-                    color={nameFocused ? theme.colors.primary : theme.colors.placeholder}
+                    size={18}
+                    color={nameFocused ? activeFocusBorder : theme.colors.placeholder}
                     style={styles.inputIcon}
                   />
                   <TextInput
@@ -303,21 +292,19 @@ export default function SetupProfileScreen() {
                   style={[
                     styles.inputContainer,
                     {
-                      backgroundColor: isDark
-                        ? 'rgba(10, 16, 28, 0.70)'
-                        : 'rgba(255, 255, 255, 0.75)',
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#F8FAFC',
                       borderColor: emailFocused
-                        ? theme.colors.primary
+                        ? activeFocusBorder
                         : isDark
-                        ? 'rgba(255, 255, 255, 0.12)'
-                        : 'rgba(226, 232, 240, 0.90)',
+                        ? 'rgba(255, 255, 255, 0.08)'
+                        : '#E2E8F0',
                     },
                   ]}
                 >
                   <Ionicons
                     name="mail-outline"
-                    size={20}
-                    color={emailFocused ? theme.colors.primary : theme.colors.placeholder}
+                    size={18}
+                    color={emailFocused ? activeFocusBorder : theme.colors.placeholder}
                     style={styles.inputIcon}
                   />
                   <TextInput
@@ -335,11 +322,11 @@ export default function SetupProfileScreen() {
                 </View>
               </View>
 
-              {/* Bio / Daily Inspiration */}
+              {/* Bio Field */}
               <View style={styles.fieldWrapper}>
                 <View style={styles.fieldLabelRow}>
                   <Text style={[styles.fieldLabel, { color: theme.colors.onSurface }]}>
-                    Lembrete Inspirador / Bio
+                    Frase de Inspiração
                   </Text>
                   <Text style={[styles.fieldOptional, { color: theme.colors.onSurfaceVariant }]}>
                     Opcional
@@ -349,27 +336,25 @@ export default function SetupProfileScreen() {
                   style={[
                     styles.bioInputContainer,
                     {
-                      backgroundColor: isDark
-                        ? 'rgba(10, 16, 28, 0.70)'
-                        : 'rgba(255, 255, 255, 0.75)',
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#F8FAFC',
                       borderColor: bioFocused
-                        ? theme.colors.primary
+                        ? activeFocusBorder
                         : isDark
-                        ? 'rgba(255, 255, 255, 0.12)'
-                        : 'rgba(226, 232, 240, 0.90)',
+                        ? 'rgba(255, 255, 255, 0.08)'
+                        : '#E2E8F0',
                     },
                   ]}
                 >
                   <TextInput
                     value={bio}
                     onChangeText={setBio}
-                    placeholder="Uma frase ou lembrete para cultivar sua melhor versão todos os dias..."
+                    placeholder="Uma frase para cultivar sua constância diária..."
                     placeholderTextColor={theme.colors.placeholder}
                     style={[styles.bioInput, { color: theme.colors.onSurface }]}
                     onFocus={() => setBioFocused(true)}
                     onBlur={() => setBioFocused(false)}
                     multiline
-                    numberOfLines={3}
+                    numberOfLines={2}
                   />
                 </View>
               </View>
@@ -378,73 +363,47 @@ export default function SetupProfileScreen() {
 
           {/* Database Connection Pill */}
           <View style={styles.dbStatusWrapper}>
-            <LiquidGlassView
-              effect="clear"
-              colorScheme={isDark ? 'dark' : 'light'}
-              tintColor={isDark ? 'rgba(0, 242, 254, 0.12)' : 'rgba(6, 182, 212, 0.10)'}
+            <View
               style={[
                 styles.dbStatusPill,
                 {
-                  borderColor: dbStatus.connected
-                    ? 'rgba(0, 242, 254, 0.35)'
-                    : 'rgba(245, 158, 11, 0.35)',
-                },
-                !isLiquidGlassSupported && {
-                  backgroundColor: isDark
-                    ? 'rgba(10, 29, 46, 0.78)'
-                    : 'rgba(255, 255, 255, 0.82)',
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#F1F5F9',
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#E2E8F0',
                 },
               ]}
             >
               <View
                 style={[
                   styles.dbStatusDot,
-                  { backgroundColor: dbStatus.connected ? '#00F2FE' : '#F59E0B' },
+                  { backgroundColor: dbStatus.connected ? '#10B981' : '#F59E0B' },
                 ]}
               />
               <Text style={[styles.dbStatusText, { color: theme.colors.onSurfaceVariant }]}>
                 {dbStatus.connected
-                  ? 'Conectado ao MongoDB Atlas (Cluster 1) 🍃'
-                  : 'Sincronização em nuvem ativa / Local-First'}
+                  ? 'Conectado ao MongoDB Atlas'
+                  : 'Modo Offline / Local-First'}
               </Text>
-            </LiquidGlassView>
+            </View>
           </View>
 
           {/* Action Button */}
           <TouchableOpacity
             onPress={handleSaveAndStart}
             disabled={isSaving}
-            activeOpacity={0.88}
-            style={styles.submitBtnWrapper}
+            activeOpacity={0.85}
+            style={[
+              styles.submitBtn,
+              { backgroundColor: buttonBg },
+              isSaving && { opacity: 0.6 },
+            ]}
           >
-            <LinearGradient
-              colors={
-                isDark
-                  ? ['#00F2FE', '#06B6D4', '#0891B2']
-                  : ['#22D3EE', '#06B6D4', '#0891B2']
-              }
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.submitBtnGradient}
-            >
-              {/* Specular sheen on top */}
-              <LinearGradient
-                colors={['rgba(255, 255, 255, 0.45)', 'rgba(255, 255, 255, 0.1)', 'transparent']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={styles.btnSheen}
-                pointerEvents="none"
-              />
-
-              {isSaving ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <>
-                  <Text style={styles.submitBtnText}>Começar a Florescer</Text>
-                  <Ionicons name="sparkles" size={18} color="#FFFFFF" style={{ marginLeft: 8 }} />
-                </>
-              )}
-            </LinearGradient>
+            {isSaving ? (
+              <ActivityIndicator color={buttonTextColor} size="small" />
+            ) : (
+              <Text style={[styles.submitBtnText, { color: buttonTextColor }]}>
+                Começar a Florescer 🌱
+              </Text>
+            )}
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
@@ -457,95 +416,78 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingHorizontal: 22,
-    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingTop: 16,
     paddingBottom: 40,
   },
   header: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   badge: {
     alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
     borderWidth: 1,
     marginBottom: 10,
   },
   badgeText: {
     fontSize: 11,
-    fontWeight: '800',
-    color: '#10B981',
-    letterSpacing: 0.8,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '800',
-    letterSpacing: -0.5,
-    marginBottom: 8,
-    lineHeight: 34,
+    letterSpacing: -0.4,
+    marginBottom: 6,
   },
   subtitle: {
     fontSize: 14,
     lineHeight: 20,
   },
   card: {
-    marginBottom: 16,
+    marginBottom: 14,
   },
   avatarCardContent: {
     alignItems: 'center',
-    padding: 22,
+    padding: 20,
   },
   avatarTouchable: {
     position: 'relative',
-    marginBottom: 14,
+    marginBottom: 12,
   },
-  avatarGlowRing: {
-    width: 114,
-    height: 114,
-    borderRadius: 57,
-    borderWidth: 2,
+  avatarRing: {
+    width: 86,
+    height: 86,
+    borderRadius: 43,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 8,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 14,
   },
   avatarImage: {
-    width: 106,
-    height: 106,
-    borderRadius: 53,
-  },
-  avatarPlaceholder: {
-    width: 106,
-    height: 106,
-    borderRadius: 53,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 82,
+    height: 82,
+    borderRadius: 41,
   },
   avatarEmoji: {
-    fontSize: 50,
+    fontSize: 40,
   },
   cameraBadge: {
     position: 'absolute',
-    bottom: 2,
-    right: 2,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    bottom: -2,
+    right: -2,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     borderWidth: 2,
-    borderColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 4,
   },
   avatarHint: {
     fontSize: 12,
     textAlign: 'center',
-    marginBottom: 14,
-    paddingHorizontal: 10,
-    lineHeight: 16,
+    marginBottom: 12,
   },
   presetsRow: {
     flexDirection: 'row',
@@ -556,24 +498,24 @@ const styles = StyleSheet.create({
   presetChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 18,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
     borderWidth: 1,
   },
   presetEmoji: {
-    fontSize: 14,
-    marginRight: 6,
+    fontSize: 13,
+    marginRight: 4,
   },
   presetLabel: {
     fontSize: 12,
   },
   formCardContent: {
-    padding: 20,
-    gap: 16,
+    padding: 18,
+    gap: 14,
   },
   fieldWrapper: {
-    gap: 6,
+    gap: 5,
   },
   fieldLabelRow: {
     flexDirection: 'row',
@@ -581,14 +523,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   fieldLabel: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   fieldRequired: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   fieldOptional: {
     fontSize: 11,
@@ -597,32 +539,32 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 16,
-    borderWidth: 1.2,
-    paddingHorizontal: 14,
-    height: 52,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    height: 48,
   },
   inputIcon: {
-    marginRight: 10,
+    marginRight: 8,
   },
   input: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
     height: '100%',
     ...Platform.select({
       web: { outlineStyle: 'none' } as any,
     }),
   },
   bioInputContainer: {
-    borderRadius: 16,
-    borderWidth: 1.2,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    minHeight: 84,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: 68,
   },
   bioInput: {
     fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 18,
     textAlignVertical: 'top',
     ...Platform.select({
       web: { outlineStyle: 'none' } as any,
@@ -630,56 +572,48 @@ const styles = StyleSheet.create({
   },
   dbStatusWrapper: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   dbStatusPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
     borderWidth: 1,
-    gap: 8,
+    gap: 6,
   },
   dbStatusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   dbStatusText: {
     fontSize: 11,
     fontWeight: '600',
   },
-  submitBtnWrapper: {
-    borderRadius: 22,
-    elevation: 8,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 16,
-    shadowColor: '#10B981',
-  },
-  submitBtnGradient: {
-    flexDirection: 'row',
+  submitBtn: {
+    borderRadius: 14,
+    paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 18,
-    borderRadius: 22,
-    borderWidth: 1.2,
-    borderColor: 'rgba(255, 255, 255, 0.40)',
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  btnSheen: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 22,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.12,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 3,
+      },
+      web: {
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+      } as any,
+    }),
   },
   submitBtnText: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '800',
-    letterSpacing: 0.3,
+    fontSize: 15,
+    fontWeight: '700',
   },
 });

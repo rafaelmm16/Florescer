@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { Routine } from '../types/routine';
 import { getRoutines, saveRoutines } from '../utils/storage';
+import { calculateCompletionUpdate } from '../utils/streak';
+import { cancelRoutineReminder } from '../utils/notifications';
 
 interface RoutineStore {
   routines: Routine[];
@@ -15,7 +17,7 @@ interface RoutineStore {
 export const useRoutineStore = create<RoutineStore>((set, get) => ({
   routines: [],
   isLoading: true,
-  
+
   loadRoutines: async () => {
     set({ isLoading: true });
     const routines = await getRoutines();
@@ -29,15 +31,35 @@ export const useRoutineStore = create<RoutineStore>((set, get) => ({
   },
 
   updateRoutine: async (updatedRoutine) => {
-    const newRoutines = get().routines.map(r => 
-      r.id === updatedRoutine.id ? updatedRoutine : r
+    const currentList = get().routines;
+    const oldRoutine = currentList.find((r) => r.id === updatedRoutine.id);
+
+    let finalRoutine = { ...updatedRoutine };
+
+    // If routine was just completed (or reached goal)
+    if (finalRoutine.isCompleted && (!oldRoutine || !oldRoutine.isCompleted)) {
+      const streakInfo = calculateCompletionUpdate(finalRoutine);
+      finalRoutine = {
+        ...finalRoutine,
+        ...streakInfo,
+      };
+    }
+
+    const newRoutines = currentList.map((r) =>
+      r.id === finalRoutine.id ? finalRoutine : r
     );
+
     set({ routines: newRoutines });
     await saveRoutines(newRoutines);
   },
 
   deleteRoutine: async (id) => {
-    const newRoutines = get().routines.filter(r => r.id !== id);
+    const toDelete = get().routines.find((r) => r.id === id);
+    if (toDelete?.notificationId) {
+      cancelRoutineReminder(toDelete.notificationId);
+    }
+
+    const newRoutines = get().routines.filter((r) => r.id !== id);
     set({ routines: newRoutines });
     await saveRoutines(newRoutines);
   },
@@ -45,5 +67,6 @@ export const useRoutineStore = create<RoutineStore>((set, get) => ({
   reorderRoutines: async (reordered) => {
     set({ routines: reordered });
     await saveRoutines(reordered);
-  }
+  },
 }));
+

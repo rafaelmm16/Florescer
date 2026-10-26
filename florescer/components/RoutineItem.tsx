@@ -3,11 +3,11 @@ import { View, StyleSheet, Alert, Pressable, Animated, TouchableOpacity, Platfor
 import { Text } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Routine } from '../types/routine';
-import { LiquidGlassView, isLiquidGlassSupported } from '@callstack/liquid-glass';
 import { useTheme } from './ThemeContext';
 import GlassCard from './GlassCard';
+import { triggerLightHaptic, triggerSuccessHaptic, triggerWarningHaptic } from '../utils/haptics';
+import { getCategoryById } from '../constants/categories';
 
 interface RoutineItemProps {
   routine: Routine;
@@ -35,6 +35,10 @@ export default function RoutineItem({
   const router = useRouter();
   const { theme, isDark } = useTheme();
 
+  const category = getCategoryById(routine.category);
+  const routineColor = routine.color || category.color || (isDark ? '#38BDF8' : '#0F172A');
+  const routineIcon = (routine.icon as any) || category.icon || 'sparkles-outline';
+
   const scaleValue = useRef(new Animated.Value(1)).current;
   const progressRatio = Math.min(1, Math.max(0, routine.progress / (routine.goal || 1)));
   const progressAnim = useRef(new Animated.Value(progressRatio)).current;
@@ -50,7 +54,7 @@ export default function RoutineItem({
 
   const handlePressIn = () => {
     Animated.spring(scaleValue, {
-      toValue: 0.97,
+      toValue: 0.98,
       useNativeDriver: true,
     }).start();
   };
@@ -64,20 +68,27 @@ export default function RoutineItem({
     }).start();
   };
 
-  const handleSetCompleted = () => {
-    const updatedRoutine = { ...routine, progress: routine.goal, isCompleted: true };
-    onUpdate(updatedRoutine);
+  const handleToggleComplete = () => {
+    if (routine.isCompleted) {
+      triggerLightHaptic();
+      onUpdate({ ...routine, progress: 0, isCompleted: false });
+    } else {
+      triggerSuccessHaptic();
+      onUpdate({ ...routine, progress: routine.goal, isCompleted: true });
+    }
   };
 
   const handleEdit = () => {
+    triggerLightHaptic();
     if (routine.isCompleted) return;
     router.push(`/routine/${routine.id}`);
   };
 
   const handleDeleteConfirmation = () => {
+    triggerWarningHaptic();
     Alert.alert(
-      'Excluir Rotina',
-      `Tem certeza que deseja excluir a rotina "${routine.name}"?`,
+      'Excluir Hábito',
+      `Deseja realmente remover "${routine.name}"?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         { text: 'Excluir', onPress: () => onDelete(routine.id), style: 'destructive' },
@@ -89,13 +100,19 @@ export default function RoutineItem({
     if (routine.progress < routine.goal) {
       const newProgress = routine.progress + 1;
       const isNowCompleted = newProgress === routine.goal;
+      if (isNowCompleted) {
+        triggerSuccessHaptic();
+      } else {
+        triggerLightHaptic();
+      }
       onUpdate({ ...routine, progress: newProgress, isCompleted: isNowCompleted });
     }
   };
 
   const handleDecrement = () => {
     if (routine.progress > 0) {
-      onUpdate({ ...routine, progress: routine.progress - 1 });
+      triggerLightHaptic();
+      onUpdate({ ...routine, progress: routine.progress - 1, isCompleted: false });
     }
   };
 
@@ -105,10 +122,14 @@ export default function RoutineItem({
   });
 
   const isComplete = routine.isCompleted || routine.progress >= routine.goal;
+  const currentStreak = routine.streak || 0;
 
   return (
     <Pressable
-      onPress={onExpandToggle}
+      onPress={() => {
+        triggerLightHaptic();
+        onExpandToggle();
+      }}
       onLongPress={!routine.isCompleted ? drag : undefined}
       disabled={isActive || routine.isCompleted}
       onPressIn={handlePressIn}
@@ -117,228 +138,229 @@ export default function RoutineItem({
     >
       <Animated.View style={{ transform: [{ scale: scaleValue }] }}>
         <GlassCard
-          borderRadius={24}
+          borderRadius={18}
           style={[
             styles.cardContainer,
             isActive && styles.activeCard,
-            isComplete && { borderColor: 'rgba(16, 185, 129, 0.45)' },
+            isComplete && {
+              borderColor: isDark ? 'rgba(52, 211, 153, 0.25)' : '#BBF7D0',
+            },
           ]}
         >
           <View style={styles.cardContent}>
-            {/* Top row: Title and Progress pill */}
+            {/* Main Habit Row */}
             <View style={styles.cardHeader}>
-              <View style={styles.titleWrapper}>
-                <View
-                  style={[
-                    styles.statusDot,
-                    {
-                      backgroundColor: isComplete ? theme.colors.success : theme.colors.primary,
-                      shadowColor: isComplete ? theme.colors.success : theme.colors.primary,
-                    },
-                  ]}
+              {/* Category / Icon Box */}
+              <TouchableOpacity
+                onPress={handleToggleComplete}
+                activeOpacity={0.7}
+                style={[
+                  styles.iconBox,
+                  {
+                    backgroundColor: isComplete
+                      ? isDark
+                        ? 'rgba(52, 211, 153, 0.15)'
+                        : '#ECFDF5'
+                      : isDark
+                      ? 'rgba(255, 255, 255, 0.05)'
+                      : '#F1F5F9',
+                    borderColor: isComplete
+                      ? isDark
+                        ? 'rgba(52, 211, 153, 0.35)'
+                        : '#A7F3D0'
+                      : isDark
+                      ? 'rgba(255, 255, 255, 0.08)'
+                      : '#E2E8F0',
+                  },
+                ]}
+              >
+                <Ionicons
+                  name={isComplete ? 'checkmark' : routineIcon}
+                  size={19}
+                  color={isComplete ? (isDark ? '#34D399' : '#059669') : routineColor}
                 />
+              </TouchableOpacity>
+
+              {/* Title & Metadata */}
+              <View style={styles.textContainer}>
                 <Text
                   style={[
                     styles.cardTitle,
                     {
-                      color: theme.colors.onSurface,
-                      textDecorationLine: routine.isCompleted ? 'line-through' : 'none',
-                      opacity: routine.isCompleted ? 0.7 : 1,
+                      color: isComplete ? theme.colors.onSurfaceVariant : theme.colors.onSurface,
+                      textDecorationLine: isComplete ? 'line-through' : 'none',
+                      opacity: isComplete ? 0.75 : 1,
                     },
                   ]}
-                  numberOfLines={2}
+                  numberOfLines={1}
                 >
                   {routine.name}
                 </Text>
+
+                <View style={styles.metaRow}>
+                  {/* Category Name */}
+                  <Text style={[styles.categoryLabel, { color: theme.colors.onSurfaceVariant }]}>
+                    {category.name}
+                  </Text>
+
+                  {/* Streak */}
+                  {currentStreak > 0 && (
+                    <View style={styles.metaItem}>
+                      <Text style={styles.metaDot}>•</Text>
+                      <Text style={[styles.streakText, { color: isDark ? '#FB923C' : '#EA580C' }]}>
+                        🔥 {currentStreak} {currentStreak === 1 ? 'dia' : 'dias'}
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* Reminder */}
+                  {routine.reminderTime && (
+                    <View style={styles.metaItem}>
+                      <Text style={styles.metaDot}>•</Text>
+                      <Text style={[styles.reminderText, { color: theme.colors.onSurfaceVariant }]}>
+                        {routine.reminderTime}
+                      </Text>
+                    </View>
+                  )}
+                </View>
               </View>
 
-              <LiquidGlassView
-                effect="clear"
-                colorScheme={isDark ? 'dark' : 'light'}
-                tintColor={
-                  isComplete
-                    ? isDark
-                      ? 'rgba(45, 212, 191, 0.25)'
-                      : 'rgba(204, 251, 241, 0.85)'
-                    : isDark
-                    ? 'rgba(0, 242, 254, 0.14)'
-                    : 'rgba(6, 182, 212, 0.12)'
-                }
+              {/* Progress Count or Check Toggle Button */}
+              <TouchableOpacity
+                onPress={routine.goal > 1 && !isComplete ? handleIncrement : handleToggleComplete}
+                activeOpacity={0.7}
                 style={[
-                  styles.badge,
+                  styles.countButton,
                   {
-                    borderColor: isComplete
-                      ? isDark
-                        ? 'rgba(45, 212, 191, 0.45)'
-                        : 'rgba(13, 148, 136, 0.35)'
-                      : isDark
-                      ? 'rgba(0, 242, 254, 0.22)'
-                      : 'rgba(6, 182, 212, 0.20)',
-                  },
-                  !isLiquidGlassSupported && {
                     backgroundColor: isComplete
                       ? isDark
-                        ? 'rgba(45, 212, 191, 0.22)'
-                        : 'rgba(204, 251, 241, 0.85)'
+                        ? 'rgba(52, 211, 153, 0.12)'
+                        : '#ECFDF5'
                       : isDark
-                      ? 'rgba(0, 242, 254, 0.10)'
-                      : 'rgba(255, 255, 255, 0.70)',
+                      ? 'rgba(255, 255, 255, 0.06)'
+                      : '#F1F5F9',
+                    borderColor: isComplete
+                      ? isDark
+                        ? 'rgba(52, 211, 153, 0.3)'
+                        : '#A7F3D0'
+                      : isDark
+                      ? 'rgba(255, 255, 255, 0.08)'
+                      : '#E2E8F0',
                   },
                 ]}
               >
-                {isComplete && (
+                {routine.goal === 1 ? (
                   <Ionicons
-                    name="checkmark-circle"
-                    size={14}
-                    color={isDark ? '#2DD4BF' : '#0D9488'}
-                    style={{ marginRight: 4 }}
+                    name={isComplete ? 'checkmark-circle' : 'ellipse-outline'}
+                    size={20}
+                    color={isComplete ? (isDark ? '#34D399' : '#059669') : theme.colors.onSurfaceVariant}
                   />
-                )}
-                <Text
-                  style={[
-                    styles.badgeText,
-                    {
-                      color: isComplete
-                        ? isDark
-                          ? '#2DD4BF'
-                          : '#0F766E'
-                        : theme.colors.onSurface,
-                    },
-                  ]}
-                >
-                  {routine.progress} / {routine.goal}
-                </Text>
-              </LiquidGlassView>
-            </View>
-
-            {/* Glowing Liquid Progress Bar in Vibrant Turquoise */}
-            <View
-              style={[
-                styles.progressBarTrack,
-                { backgroundColor: isDark ? 'rgba(0, 242, 254, 0.08)' : 'rgba(6, 182, 212, 0.08)' },
-              ]}
-            >
-              <Animated.View style={[styles.progressBarFill, { width: progressPercent }]}>
-                <LinearGradient
-                  colors={
-                    isComplete
-                      ? ['#2DD4BF', '#14B8A6', '#059669']
-                      : ['#00F2FE', '#06B6D4', '#0284C7']
-                  }
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={StyleSheet.absoluteFill}
-                />
-              </Animated.View>
-            </View>
-
-            {/* Week days indicator chips */}
-            {routine.days && routine.days.length > 0 && (
-              <View style={styles.daysRow}>
-                {routine.days.map((dayIdx) => (
-                  <View
-                    key={dayIdx}
+                ) : (
+                  <Text
                     style={[
-                      styles.dayChip,
+                      styles.countText,
                       {
-                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.65)',
-                        borderColor: isDark ? 'rgba(255, 255, 255, 0.10)' : 'rgba(226, 232, 240, 0.8)',
+                        color: isComplete
+                          ? isDark
+                            ? '#34D399'
+                            : '#059669'
+                          : theme.colors.onSurface,
                       },
                     ]}
                   >
-                    <Text style={[styles.dayChipText, { color: theme.colors.onSurfaceVariant }]}>
-                      {weekDayLabels[dayIdx]}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            )}
+                    {routine.progress}/{routine.goal}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
 
-            {/* Expanded options toolbar */}
+            {/* Minimalist Progress Track (Subtle 3px line) */}
+            <View
+              style={[
+                styles.progressBarTrack,
+                { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#F1F5F9' },
+              ]}
+            >
+              <Animated.View
+                style={[
+                  styles.progressBarFill,
+                  {
+                    width: progressPercent,
+                    backgroundColor: isComplete ? (isDark ? '#34D399' : '#10B981') : routineColor,
+                  },
+                ]}
+              />
+            </View>
+
+            {/* Expanded Toolbar for Quick Actions */}
             {isExpanded && !routine.isCompleted && (
               <View
                 style={[
                   styles.expandedToolbar,
                   {
-                    borderTopColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
+                    borderTopColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F1F5F9',
                   },
                 ]}
               >
-                {/* Decrement Button */}
-                <TouchableOpacity
-                  onPress={handleDecrement}
-                  style={[
-                    styles.toolBtn,
-                    {
-                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.07)' : 'rgba(255, 255, 255, 0.65)',
-                      borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(226, 232, 240, 0.8)',
-                    },
-                  ]}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="remove" size={18} color={theme.colors.onSurface} />
-                </TouchableOpacity>
+                <View style={styles.quickCounterRow}>
+                  <TouchableOpacity
+                    onPress={handleDecrement}
+                    style={[
+                      styles.actionBtn,
+                      {
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F1F5F9',
+                        borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#E2E8F0',
+                      },
+                    ]}
+                  >
+                    <Ionicons name="remove" size={16} color={theme.colors.onSurface} />
+                  </TouchableOpacity>
 
-                {/* Increment Button */}
-                <TouchableOpacity
-                  onPress={handleIncrement}
-                  style={[
-                    styles.toolBtn,
-                    {
-                      backgroundColor: isDark ? 'rgba(0, 242, 254, 0.18)' : 'rgba(6, 182, 212, 0.12)',
-                      borderColor: theme.colors.primary,
-                    },
-                  ]}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="add" size={20} color={theme.colors.primary} />
-                </TouchableOpacity>
+                  <Text style={[styles.counterLabel, { color: theme.colors.onSurface }]}>
+                    {routine.progress} de {routine.goal}
+                  </Text>
 
-                {/* Complete Button */}
-                <TouchableOpacity
-                  onPress={handleSetCompleted}
-                  style={[
-                    styles.toolBtn,
-                    styles.toolBtnComplete,
-                    {
-                      backgroundColor: theme.colors.secondary,
-                      borderColor: theme.colors.secondary,
-                    },
-                  ]}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="checkmark" size={18} color="#FFFFFF" />
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleIncrement}
+                    style={[
+                      styles.actionBtn,
+                      {
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F1F5F9',
+                        borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#E2E8F0',
+                      },
+                    ]}
+                  >
+                    <Ionicons name="add" size={16} color={theme.colors.onSurface} />
+                  </TouchableOpacity>
+                </View>
 
-                {/* Edit Button */}
-                <TouchableOpacity
-                  onPress={handleEdit}
-                  style={[
-                    styles.toolBtn,
-                    {
-                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.07)' : 'rgba(255, 255, 255, 0.65)',
-                      borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(226, 232, 240, 0.8)',
-                    },
-                  ]}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="pencil" size={16} color={theme.colors.onSurfaceVariant} />
-                </TouchableOpacity>
+                <View style={styles.actionIconsRow}>
+                  <TouchableOpacity
+                    onPress={handleEdit}
+                    style={[
+                      styles.actionIconBtn,
+                      {
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F1F5F9',
+                        borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#E2E8F0',
+                      },
+                    ]}
+                  >
+                    <Ionicons name="pencil-outline" size={15} color={theme.colors.onSurfaceVariant} />
+                  </TouchableOpacity>
 
-                {/* Delete Button */}
-                <TouchableOpacity
-                  onPress={handleDeleteConfirmation}
-                  style={[
-                    styles.toolBtn,
-                    {
-                      backgroundColor: isDark ? 'rgba(239, 68, 68, 0.18)' : 'rgba(239, 68, 68, 0.08)',
-                      borderColor: isDark ? 'rgba(239, 68, 68, 0.35)' : 'rgba(239, 68, 68, 0.2)',
-                    },
-                  ]}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="trash-outline" size={16} color={theme.colors.danger} />
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleDeleteConfirmation}
+                    style={[
+                      styles.actionIconBtn,
+                      {
+                        backgroundColor: isDark ? 'rgba(239, 68, 68, 0.10)' : '#FEF2F2',
+                        borderColor: isDark ? 'rgba(239, 68, 68, 0.20)' : '#FECACA',
+                      },
+                    ]}
+                  >
+                    <Ionicons name="trash-outline" size={15} color="#EF4444" />
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
           </View>
@@ -350,127 +372,128 @@ export default function RoutineItem({
 
 const styles = StyleSheet.create({
   pressable: {
-    marginVertical: 7,
+    marginVertical: 5,
   },
   cardContainer: {
     width: '100%',
   },
   activeCard: {
-    borderColor: '#34D399',
-    transform: [{ scale: 1.02 }],
+    borderColor: '#38BDF8',
+    transform: [{ scale: 1.01 }],
   },
   cardContent: {
-    padding: 18,
+    padding: 16,
   },
   cardHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 12,
   },
-  titleWrapper: {
+  iconBox: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  textContainer: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 10,
-    elevation: 3,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.6,
-    shadowRadius: 4,
+    justifyContent: 'center',
   },
   cardTitle: {
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '700',
     letterSpacing: -0.2,
-    flex: 1,
+    marginBottom: 3,
   },
-  badge: {
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 11,
-    paddingVertical: 5,
-    borderRadius: 14,
-    borderWidth: 1.2,
-    ...Platform.select({
-      web: {
-        backdropFilter: 'blur(16px) saturate(180%)',
-        boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.45)',
-      } as any,
-    }),
+    flexWrap: 'wrap',
   },
-  badgeText: {
+  categoryLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  metaDot: {
+    marginHorizontal: 5,
+    fontSize: 10,
+    color: '#94A3B8',
+  },
+  streakText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  reminderText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  countButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  countText: {
     fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0.2,
+    fontWeight: '700',
   },
   progressBarTrack: {
-    height: 10,
-    borderRadius: 5,
+    height: 3.5,
+    borderRadius: 2,
     width: '100%',
     overflow: 'hidden',
-    borderWidth: 0.8,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   progressBarFill: {
     height: '100%',
-    borderRadius: 5,
-  },
-  daysRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 12,
-    gap: 6,
-  },
-  dayChip: {
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: 10,
-    borderWidth: 1.2,
-    ...Platform.select({
-      web: {
-        backdropFilter: 'blur(12px)',
-        boxShadow: 'inset 0 1px 1px rgba(255, 255, 255, 0.35)',
-      } as any,
-    }),
-  },
-  dayChipText: {
-    fontSize: 11,
-    fontWeight: '700',
+    borderRadius: 2,
   },
   expandedToolbar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 16,
-    paddingTop: 14,
+    marginTop: 14,
+    paddingTop: 12,
     borderTopWidth: 1,
   },
-  toolBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 1.2,
+  quickCounterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  counterLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    paddingHorizontal: 4,
+  },
+  actionBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    ...Platform.select({
-      web: {
-        backdropFilter: 'blur(16px)',
-        boxShadow: 'inset 0 1px 1.5px rgba(255, 255, 255, 0.45)',
-      } as any,
-    }),
   },
-  toolBtnComplete: {
-    width: 52,
-    elevation: 4,
-    shadowColor: '#10B981',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
+  actionIconsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  actionIconBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

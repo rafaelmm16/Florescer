@@ -4,22 +4,30 @@ Um aplicativo mobile para controle e acompanhamento de hábitos, desenvolvido co
 
 ## 📱 Funcionalidades
 
-- ✅ **Gerenciamento de Hábitos**: Criar, visualizar e organizar seus hábitos
-- 🎯 **Marcar como Concluído**: Acompanhe o progresso dos seus hábitos
-- 📋 **Hábitos Concluídos**: Visualize todos os hábitos que você já completou
-- 👤 **Perfil do Usuário**: Personalize suas informações pessoais
-- ⚙️ **Configurações**: Alterne entre tema claro e escuro
-- 📱 **Interface Responsiva**: Design adaptado para diferentes tamanhos de tela
+- ✅ **Gerenciamento de Hábitos**: Criar, visualizar, editar e reorganizar hábitos com facilidade
+- 🔥 **Sistema de Ofensivas (Streaks)**: Acompanhe dias seguidos de conclusão com contadores dinâmicos e recorde pessoal
+- 🔄 **Ciclo de Reset Diário Inteligente**: Zera automaticamente o progresso a cada novo dia mantendo suas ofensivas intactas
+- 🎨 **Categorias, Cores e Ícones Customizados**: Organize por Saúde, Estudos, Mente, Treino, Foco ou Lazer com cores vibrantes
+- ⏰ **Lembretes Diários (Notificações Locais)**: Agende horários específicos para receber notificações no celular
+- 📳 **Feedback Tátil Háptico**: Vibrações táteis sutis e satisfatórias ao interagir, pontuar e concluir metas
+- 📊 **Heatmap de Constância (Estilo GitHub)**: Grade visual dos últimos 28 dias para acompanhar a evolução da sua disciplina
+- 🏆 **Histórico & Conquistas**: Estatísticas completas com taxa de conclusão, recordes e rotinas realizadas
+- ☁️ **Sincronização em Nuvem (MongoDB Atlas)**: Backup automático e suporte multi-usuário com arquitetura offline-first
+- 👤 **Perfil do Usuário**: Personalize nome, foto de perfil, e-mail e bio
+- ⚙️ **Configurações & Temas**: Alterne fluidamente entre tema claro e escuro com Glassmorphism
 
 ## 🛠️ Tecnologias Utilizadas
 
-- **React Native** - Framework para desenvolvimento mobile
-- **Expo** - Plataforma para desenvolvimento React Native
-- **TypeScript** - Linguagem tipada baseada em JavaScript
-- **React Native Paper** - Biblioteca de componentes Material Design
-- **Expo Router** - Sistema de navegação baseado em arquivos
-- **AsyncStorage** - Armazenamento local persistente
-- **React Native Draggable FlatList** - Funcionalidade de arrastar e soltar
+- **React Native & Expo SDK 58** - Framework mobile de alta performance
+- **TypeScript** - Tipagem estática e segura
+- **Expo Router** - Roteamento declarativo baseado em arquivos
+- **Zustand & AsyncStorage** - Gerenciamento de estado e persistência local offline-first
+- **Node.js, Express & MongoDB Atlas** - API REST para persistência e backup em nuvem
+- **Expo Notifications** - Sistema de agendamento de lembretes locais
+- **Expo Haptics** - Feedback tátil para interações do usuário
+- **Liquid Glass & LinearGradient** - Efeitos visuais modernos de Glassmorphism
+- **React Native Draggable FlatList** - Reorganização fluida de hábitos por arrastar e soltar
+- **Jest & @react-native/jest-preset** - Testes unitários automatizados para regras de negócio e streaks
 
 ## 📋 Pré-requisitos
 

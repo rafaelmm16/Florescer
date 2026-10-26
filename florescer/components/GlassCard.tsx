@@ -1,10 +1,5 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle, StyleProp, Platform } from 'react-native';
-import {
-  LiquidGlassView,
-  isLiquidGlassSupported,
-  type LiquidGlassViewProps,
-} from '@callstack/liquid-glass';
 import { useTheme } from './ThemeContext';
 
 export interface GlassCardProps {
@@ -13,47 +8,41 @@ export interface GlassCardProps {
   borderRadius?: number;
   variant?: 'card' | 'capsule' | 'bubble';
   interactive?: boolean;
-  effect?: LiquidGlassViewProps['effect'];
+  effect?: string;
   tintColor?: string;
-  layered?: boolean; // backwards compatibility
-  highlight?: boolean; // backwards compatibility
-  chromatic?: boolean; // backwards compatibility
+  layered?: boolean;
+  highlight?: boolean;
+  chromatic?: boolean;
 }
 
 export default function GlassCard({
   children,
   style,
-  borderRadius = 22,
+  borderRadius = 18,
   variant = 'card',
-  interactive = false,
-  effect = 'regular',
-  tintColor,
 }: GlassCardProps) {
   const { theme, isDark } = useTheme();
 
   const computedRadius =
-    variant === 'capsule' ? 36 : variant === 'bubble' ? 999 : borderRadius;
+    variant === 'capsule' ? 32 : variant === 'bubble' ? 999 : borderRadius;
 
   return (
-    <LiquidGlassView
-      interactive={interactive}
-      effect={effect}
-      colorScheme={isDark ? 'dark' : 'light'}
-      tintColor={tintColor}
+    <View
       style={[
         styles.baseCard,
         {
           borderRadius: computedRadius,
-          shadowColor: isDark ? '#00F2FE' : theme.colors.shadow,
+          backgroundColor: isDark ? '#111622' : '#FFFFFF',
+          borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#E2E8F0',
         },
-        !isLiquidGlassSupported && (isDark ? styles.fallbackDark : styles.fallbackLight),
+        isDark ? styles.darkShadow : styles.lightShadow,
         style,
       ]}
     >
       <View style={[styles.innerContent, { borderRadius: computedRadius }]}>
         {children}
       </View>
-    </LiquidGlassView>
+    </View>
   );
 }
 
@@ -62,37 +51,40 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.18)',
-    elevation: 6,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.16,
-    shadowRadius: 18,
   },
   innerContent: {
     position: 'relative',
     width: '100%',
   },
-  fallbackDark: {
-    backgroundColor: 'rgba(10, 29, 46, 0.68)',
-    borderColor: 'rgba(0, 242, 254, 0.25)',
+  lightShadow: {
     ...Platform.select({
+      ios: {
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.04,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 1.5,
+      },
       web: {
-        backdropFilter: 'blur(28px) saturate(200%)',
-        WebkitBackdropFilter: 'blur(28px) saturate(200%)',
-        boxShadow:
-          '0 8px 32px 0 rgba(0, 0, 0, 0.40), inset 0 1px 1px 0 rgba(255, 255, 255, 0.20)',
+        boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02)',
       } as any,
     }),
   },
-  fallbackLight: {
-    backgroundColor: 'rgba(255, 255, 255, 0.78)',
-    borderColor: 'rgba(255, 255, 255, 0.85)',
+  darkShadow: {
     ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.35,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
       web: {
-        backdropFilter: 'blur(24px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-        boxShadow:
-          '0 8px 32px 0 rgba(8, 47, 73, 0.08), inset 0 1px 1px 0 rgba(255, 255, 255, 0.80)',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.35)',
       } as any,
     }),
   },

@@ -90,6 +90,24 @@ export async function isProfileConfigured(): Promise<boolean> {
   }
 }
 
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  try {
+    const raw = await AsyncStorage.getItem(USER_PROFILE_KEY);
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (p.email && p.email.trim() !== '') {
+        headers['x-user-id'] = p.email.trim().toLowerCase();
+      } else if (p.name && p.name.trim() !== '') {
+        headers['x-user-id'] = p.name.trim().toLowerCase().replace(/\s+/g, '_');
+      }
+    }
+  } catch {}
+  return headers;
+}
+
 /**
  * Fetch profile from MongoDB Atlas
  */
@@ -98,7 +116,9 @@ export async function fetchProfileFromDatabase(): Promise<UserProfile | null> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3500);
 
+    const headers = await getAuthHeaders();
     const res = await fetch(`${getApiBaseUrl()}/profile`, {
+      headers,
       signal: controller.signal,
     });
     clearTimeout(timeoutId);
@@ -137,9 +157,14 @@ export async function saveUserProfile(profile: UserProfile): Promise<{ success: 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 6000);
 
+    const headers = await getAuthHeaders();
+    if (profile.email) {
+      headers['x-user-id'] = profile.email.trim().toLowerCase();
+    }
+
     const res = await fetch(`${getApiBaseUrl()}/profile`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(profile),
       signal: controller.signal,
     });
@@ -163,9 +188,10 @@ export async function syncRoutinesToDatabase(routines: Routine[]): Promise<boole
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
+    const headers = await getAuthHeaders();
     const res = await fetch(`${getApiBaseUrl()}/routines`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ routines }),
       signal: controller.signal,
     });
@@ -184,7 +210,9 @@ export async function fetchRoutinesFromDatabase(): Promise<Routine[] | null> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 4000);
 
+    const headers = await getAuthHeaders();
     const res = await fetch(`${getApiBaseUrl()}/routines`, {
+      headers,
       signal: controller.signal,
     });
     clearTimeout(timeoutId);
@@ -198,3 +226,4 @@ export async function fetchRoutinesFromDatabase(): Promise<Routine[] | null> {
     return null;
   }
 }
+

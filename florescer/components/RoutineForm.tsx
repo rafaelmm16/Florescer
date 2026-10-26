@@ -1,40 +1,61 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, TextInput, Platform } from 'react-native';
-import { Text, HelperText } from 'react-native-paper';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, StyleSheet, TouchableOpacity, TextInput, ScrollView, Platform } from 'react-native';
+import { Text, HelperText, Switch } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { Routine } from '../types/routine';
 import { useTheme } from './ThemeContext';
 import GlassCard from './GlassCard';
+import { HABIT_CATEGORIES, PRESET_COLORS, getCategoryById } from '../constants/categories';
+import { triggerLightHaptic, triggerSuccessHaptic } from '../utils/haptics';
 
 interface RoutineFormProps {
-  onSave: (routine: Omit<Routine, 'id' | 'progress' | 'isCompleted'>) => void;
+  onSave: (routine: {
+    name: string;
+    days: number[];
+    goal: number;
+    category: string;
+    color: string;
+    icon: string;
+    reminderTime: string | null;
+  }) => void;
   initialRoutine?: Routine | null;
   disabled?: boolean;
 }
 
 const weekDays = [
-  { label: 'D', full: 'Domingo' },
-  { label: 'S', full: 'Segunda' },
-  { label: 'T', full: 'Terça' },
-  { label: 'Q', full: 'Quarta' },
-  { label: 'Q', full: 'Quinta' },
-  { label: 'S', full: 'Sexta' },
-  { label: 'S', full: 'Sábado' },
+  { label: 'D', full: 'Dom' },
+  { label: 'S', full: 'Seg' },
+  { label: 'T', full: 'Ter' },
+  { label: 'Q', full: 'Qua' },
+  { label: 'Q', full: 'Qui' },
+  { label: 'S', full: 'Sex' },
+  { label: 'S', full: 'Sáb' },
 ];
+
+const PRESET_REMINDER_TIMES = ['07:00', '08:00', '09:00', '12:30', '18:00', '21:00'];
 
 export default function RoutineForm({ onSave, initialRoutine, disabled = false }: RoutineFormProps) {
   const { theme, isDark } = useTheme();
+
+  const initialCat = getCategoryById(initialRoutine?.category);
   const [name, setName] = useState(initialRoutine?.name || '');
   const [days, setDays] = useState(initialRoutine?.days || [1, 2, 3, 4, 5]); // default Mon-Fri
   const [goal, setGoal] = useState(initialRoutine?.goal?.toString() || '1');
-  const [nameError, setNameError] = useState<string | null>(null);
+  const [category, setCategory] = useState<string>(initialRoutine?.category || initialCat.id);
+  const [selectedColor, setSelectedColor] = useState<string>(initialRoutine?.color || initialCat.color);
+  const [selectedIcon, setSelectedIcon] = useState<string>(initialRoutine?.icon || initialCat.icon);
 
+  // Reminder state
+  const [reminderEnabled, setReminderEnabled] = useState<boolean>(!!initialRoutine?.reminderTime);
+  const [reminderTime, setReminderTime] = useState<string>(initialRoutine?.reminderTime || '08:00');
+
+  const [nameError, setNameError] = useState<string | null>(null);
   const [nameFocused, setNameFocused] = useState(false);
   const [goalFocused, setGoalFocused] = useState(false);
 
   const toggleDay = (dayIndex: number) => {
     if (disabled) return;
+    triggerLightHaptic();
     setDays((prev) =>
       prev.includes(dayIndex) ? prev.filter((d) => d !== dayIndex) : [...prev, dayIndex].sort()
     );
@@ -42,11 +63,33 @@ export default function RoutineForm({ onSave, initialRoutine, disabled = false }
 
   const selectAllDays = () => {
     if (disabled) return;
+    triggerLightHaptic();
     if (days.length === 7) {
       setDays([]);
     } else {
       setDays([0, 1, 2, 3, 4, 5, 6]);
     }
+  };
+
+  const handleSelectCategory = (catId: string) => {
+    if (disabled) return;
+    triggerLightHaptic();
+    const cat = getCategoryById(catId);
+    setCategory(catId);
+    setSelectedColor(cat.color);
+    setSelectedIcon(cat.icon);
+  };
+
+  const handleSelectColor = (hex: string) => {
+    if (disabled) return;
+    triggerLightHaptic();
+    setSelectedColor(hex);
+  };
+
+  const handleSelectReminderTime = (time: string) => {
+    if (disabled) return;
+    triggerLightHaptic();
+    setReminderTime(time);
   };
 
   const handleSubmit = () => {
@@ -59,40 +102,50 @@ export default function RoutineForm({ onSave, initialRoutine, disabled = false }
     const parsedGoal = parseInt(goal, 10);
     const finalGoal = isNaN(parsedGoal) || parsedGoal <= 0 ? 1 : parsedGoal;
 
+    triggerSuccessHaptic();
+
     onSave({
       name: name.trim(),
       days,
       goal: finalGoal,
+      category,
+      color: selectedColor,
+      icon: selectedIcon,
+      reminderTime: reminderEnabled ? reminderTime : null,
     });
   };
 
+  const activeFocusBorder = isDark ? '#38BDF8' : '#0F172A';
+  const buttonBg = isDark ? '#38BDF8' : '#0F172A';
+  const buttonTextColor = isDark ? '#090D14' : '#FFFFFF';
+
   return (
     <View style={styles.container}>
-      <GlassCard borderRadius={28} style={styles.formCard}>
+      <GlassCard borderRadius={20} style={styles.formCard}>
         <View style={styles.cardPadding}>
           {/* Routine Name Field */}
           <Text style={[styles.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>
-            Nome da Rotina
+            Nome do Hábito
           </Text>
           <View
             style={[
               styles.inputContainer,
               {
-                backgroundColor: isDark ? 'rgba(10, 16, 28, 0.65)' : 'rgba(255, 255, 255, 0.72)',
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#F8FAFC',
                 borderColor: nameFocused
-                  ? theme.colors.primary
+                  ? activeFocusBorder
                   : nameError
-                  ? theme.colors.danger
+                  ? '#EF4444'
                   : isDark
-                  ? 'rgba(255, 255, 255, 0.12)'
-                  : 'rgba(226, 232, 240, 0.85)',
+                  ? 'rgba(255, 255, 255, 0.08)'
+                  : '#E2E8F0',
               },
             ]}
           >
             <Ionicons
-              name="sparkles-outline"
-              size={20}
-              color={nameFocused ? theme.colors.primary : theme.colors.placeholder}
+              name={(selectedIcon as any) || 'sparkles-outline'}
+              size={18}
+              color={nameFocused ? activeFocusBorder : theme.colors.placeholder}
               style={styles.inputIcon}
             />
             <TextInput
@@ -103,7 +156,7 @@ export default function RoutineForm({ onSave, initialRoutine, disabled = false }
               }}
               onFocus={() => setNameFocused(true)}
               onBlur={() => setNameFocused(false)}
-              placeholder="Ex: Beber 2L de água, Meditar..."
+              placeholder="Ex: Beber 2L de água, Meditar, Ler..."
               placeholderTextColor={theme.colors.placeholder}
               editable={!disabled}
               style={[styles.textInput, { color: theme.colors.onSurface }]}
@@ -115,27 +168,111 @@ export default function RoutineForm({ onSave, initialRoutine, disabled = false }
             </HelperText>
           )}
 
+          {/* Category Selection */}
+          <Text style={[styles.fieldLabel, { color: theme.colors.onSurfaceVariant, marginTop: 18 }]}>
+            Categoria
+          </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryScroll}
+          >
+            {HABIT_CATEGORIES.map((cat) => {
+              const isSelected = category === cat.id;
+              return (
+                <TouchableOpacity
+                  key={cat.id}
+                  onPress={() => handleSelectCategory(cat.id)}
+                  disabled={disabled}
+                  activeOpacity={0.7}
+                  style={[
+                    styles.categoryChip,
+                    {
+                      backgroundColor: isSelected
+                        ? isDark
+                          ? 'rgba(56, 189, 248, 0.12)'
+                          : 'rgba(15, 23, 42, 0.06)'
+                        : isDark
+                        ? 'rgba(255, 255, 255, 0.04)'
+                        : '#F8FAFC',
+                      borderColor: isSelected
+                        ? activeFocusBorder
+                        : isDark
+                        ? 'rgba(255, 255, 255, 0.08)'
+                        : '#E2E8F0',
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name={cat.icon as any}
+                    size={15}
+                    color={isSelected ? activeFocusBorder : theme.colors.onSurfaceVariant}
+                    style={{ marginRight: 6 }}
+                  />
+                  <Text
+                    style={[
+                      styles.categoryChipText,
+                      {
+                        color: isSelected ? theme.colors.onSurface : theme.colors.onSurfaceVariant,
+                        fontWeight: isSelected ? '700' : '500',
+                      },
+                    ]}
+                  >
+                    {cat.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          {/* Color Customization */}
+          <Text style={[styles.fieldLabel, { color: theme.colors.onSurfaceVariant, marginTop: 18 }]}>
+            Cor de Destaque
+          </Text>
+          <View style={styles.colorRow}>
+            {PRESET_COLORS.map((hex) => {
+              const isSelected = selectedColor === hex;
+              return (
+                <TouchableOpacity
+                  key={hex}
+                  onPress={() => handleSelectColor(hex)}
+                  disabled={disabled}
+                  style={[
+                    styles.colorDot,
+                    { backgroundColor: hex },
+                    isSelected && [
+                      styles.colorDotSelected,
+                      { borderColor: isDark ? '#FFFFFF' : '#0F172A' },
+                    ],
+                  ]}
+                >
+                  {isSelected && <Ionicons name="checkmark" size={12} color="#FFFFFF" />}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
           {/* Goal Field */}
           <Text style={[styles.fieldLabel, { color: theme.colors.onSurfaceVariant, marginTop: 18 }]}>
-            Meta Diária (repetições)
+            Meta Diária (vezes por dia)
           </Text>
           <View
             style={[
               styles.inputContainer,
               {
-                backgroundColor: isDark ? 'rgba(10, 16, 28, 0.65)' : 'rgba(255, 255, 255, 0.72)',
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#F8FAFC',
                 borderColor: goalFocused
-                  ? theme.colors.primary
+                  ? activeFocusBorder
                   : isDark
-                  ? 'rgba(255, 255, 255, 0.12)'
-                  : 'rgba(226, 232, 240, 0.85)',
+                  ? 'rgba(255, 255, 255, 0.08)'
+                  : '#E2E8F0',
               },
             ]}
           >
             <Ionicons
               name="flag-outline"
-              size={20}
-              color={goalFocused ? theme.colors.primary : theme.colors.placeholder}
+              size={18}
+              color={goalFocused ? activeFocusBorder : theme.colors.placeholder}
               style={styles.inputIcon}
             />
             <TextInput
@@ -151,14 +288,86 @@ export default function RoutineForm({ onSave, initialRoutine, disabled = false }
             />
           </View>
 
+          {/* Reminder Section */}
+          <View style={[styles.reminderRow, { borderTopColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F1F5F9' }]}>
+            <View>
+              <Text style={[styles.fieldLabel, { marginBottom: 2, color: theme.colors.onSurface }]}>
+                Lembrete Diário
+              </Text>
+              <Text style={[styles.reminderSubtext, { color: theme.colors.onSurfaceVariant }]}>
+                Notificação para manter o foco
+              </Text>
+            </View>
+            <Switch
+              value={reminderEnabled}
+              onValueChange={(val) => {
+                triggerLightHaptic();
+                setReminderEnabled(val);
+              }}
+              color={activeFocusBorder}
+              disabled={disabled}
+            />
+          </View>
+
+          {reminderEnabled && (
+            <View
+              style={[
+                styles.reminderTimeBox,
+                { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#F8FAFC' },
+              ]}
+            >
+              <View style={styles.presetTimesRow}>
+                {PRESET_REMINDER_TIMES.map((time) => {
+                  const isSelected = reminderTime === time;
+                  return (
+                    <TouchableOpacity
+                      key={time}
+                      onPress={() => handleSelectReminderTime(time)}
+                      disabled={disabled}
+                      style={[
+                        styles.presetTimeChip,
+                        {
+                          backgroundColor: isSelected
+                            ? activeFocusBorder
+                            : isDark
+                            ? 'rgba(255, 255, 255, 0.05)'
+                            : '#FFFFFF',
+                          borderColor: isSelected
+                            ? activeFocusBorder
+                            : isDark
+                            ? 'rgba(255, 255, 255, 0.08)'
+                            : '#E2E8F0',
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.presetTimeText,
+                          {
+                            color: isSelected
+                              ? buttonTextColor
+                              : theme.colors.onSurface,
+                            fontWeight: isSelected ? '700' : '500',
+                          },
+                        ]}
+                      >
+                        {time}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
           {/* Week Days Section */}
           <View style={styles.daysHeaderRow}>
             <Text style={[styles.fieldLabel, { color: theme.colors.onSurfaceVariant, marginBottom: 0 }]}>
               Dias da Semana
             </Text>
             <TouchableOpacity onPress={selectAllDays} disabled={disabled}>
-              <Text style={[styles.toggleAllText, { color: theme.colors.primary }]}>
-                {days.length === 7 ? 'Desmarcar todos' : 'Todos os dias'}
+              <Text style={[styles.toggleAllText, { color: activeFocusBorder }]}>
+                {days.length === 7 ? 'Desmarcar' : 'Todos'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -176,15 +385,15 @@ export default function RoutineForm({ onSave, initialRoutine, disabled = false }
                     styles.dayChip,
                     {
                       backgroundColor: isSelected
-                        ? theme.colors.primary
+                        ? activeFocusBorder
                         : isDark
-                        ? 'rgba(255, 255, 255, 0.06)'
-                        : 'rgba(255, 255, 255, 0.70)',
+                        ? 'rgba(255, 255, 255, 0.04)'
+                        : '#F8FAFC',
                       borderColor: isSelected
-                        ? theme.colors.primary
+                        ? activeFocusBorder
                         : isDark
-                        ? 'rgba(255, 255, 255, 0.12)'
-                        : 'rgba(226, 232, 240, 0.85)',
+                        ? 'rgba(255, 255, 255, 0.08)'
+                        : '#E2E8F0',
                     },
                   ]}
                 >
@@ -192,12 +401,12 @@ export default function RoutineForm({ onSave, initialRoutine, disabled = false }
                     style={[
                       styles.dayChipLabel,
                       {
-                        color: isSelected ? '#FFFFFF' : theme.colors.onSurface,
-                        fontWeight: isSelected ? '800' : '600',
+                        color: isSelected ? buttonTextColor : theme.colors.onSurface,
+                        fontWeight: isSelected ? '700' : '500',
                       },
                     ]}
                   >
-                    {day.label}
+                    {day.full}
                   </Text>
                 </TouchableOpacity>
               );
@@ -206,41 +415,20 @@ export default function RoutineForm({ onSave, initialRoutine, disabled = false }
         </View>
       </GlassCard>
 
-      {/* Submit Button */}
+      {/* Modern Minimalist Submit Button */}
       <TouchableOpacity
-        style={styles.submitContainer}
+        style={[
+          styles.submitBtn,
+          { backgroundColor: buttonBg },
+          disabled && { opacity: 0.5 },
+        ]}
         onPress={handleSubmit}
         disabled={disabled}
-        activeOpacity={0.88}
+        activeOpacity={0.85}
       >
-        <LinearGradient
-          colors={['#34D399', '#10B981', '#059669']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[
-            styles.submitGradient,
-            disabled && { opacity: 0.5 },
-          ]}
-        >
-          {/* Subtle liquid sheen */}
-          <LinearGradient
-            colors={['rgba(255, 255, 255, 0.45)', 'rgba(255, 255, 255, 0.1)', 'transparent']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 0.8 }}
-            style={styles.buttonShine}
-            pointerEvents="none"
-          />
-
-          <Ionicons
-            name={initialRoutine ? 'checkmark-circle-outline' : 'leaf-outline'}
-            size={22}
-            color="#FFFFFF"
-            style={{ marginRight: 8 }}
-          />
-          <Text style={styles.submitText}>
-            {initialRoutine ? 'Atualizar Rotina' : 'Salvar Nova Rotina'}
-          </Text>
-        </LinearGradient>
+        <Text style={[styles.submitText, { color: buttonTextColor }]}>
+          {initialRoutine ? 'Atualizar Hábito' : 'Salvar Hábito'}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -249,98 +437,150 @@ export default function RoutineForm({ onSave, initialRoutine, disabled = false }
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
-    paddingTop: 8,
+    marginTop: 6,
   },
   formCard: {
-    marginBottom: 24,
+    marginBottom: 16,
   },
   cardPadding: {
-    padding: 22,
+    padding: 20,
   },
   fieldLabel: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
     marginBottom: 8,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 14,
+    borderRadius: 12,
     borderWidth: 1,
-    paddingHorizontal: 14,
-    height: 54,
+    paddingHorizontal: 12,
+    height: 48,
   },
   inputIcon: {
-    marginRight: 10,
+    marginRight: 8,
   },
   textInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 15,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
     height: '100%',
-    ...Platform.select({
-      web: { outlineStyle: 'none' } as any,
-    }),
+  },
+  categoryScroll: {
+    flexDirection: 'row',
+    paddingVertical: 2,
+    gap: 8,
+  },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  categoryChipText: {
+    fontSize: 13,
+  },
+  colorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 2,
+  },
+  colorDot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  colorDotSelected: {
+    borderWidth: 2,
+    transform: [{ scale: 1.15 }],
+  },
+  reminderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 20,
+    paddingTop: 14,
+    borderTopWidth: 1,
+  },
+  reminderSubtext: {
+    fontSize: 12,
+  },
+  reminderTimeBox: {
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 12,
+  },
+  presetTimesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  presetTimeChip: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  presetTimeText: {
+    fontSize: 12,
   },
   daysHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 22,
-    marginBottom: 12,
+    marginTop: 20,
+    marginBottom: 10,
   },
   toggleAllText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   daysGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   dayChip: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    borderWidth: 1.2,
-    justifyContent: 'center',
+    width: 38,
+    height: 40,
+    borderRadius: 10,
+    borderWidth: 1,
     alignItems: 'center',
-    elevation: 2,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    justifyContent: 'center',
   },
   dayChipLabel: {
-    fontSize: 15,
+    fontSize: 12,
   },
-  submitContainer: {
-    borderRadius: 20,
-    elevation: 8,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-  },
-  submitGradient: {
-    flexDirection: 'row',
+  submitBtn: {
+    borderRadius: 14,
+    paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 18,
-    borderRadius: 20,
-    borderWidth: 1.2,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  buttonShine: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 18,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.12,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 3,
+      },
+      web: {
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+      } as any,
+    }),
   },
   submitText: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '800',
-    letterSpacing: 0.2,
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
 });

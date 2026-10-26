@@ -9,20 +9,51 @@ import Header from '../components/Header';
 import { useTheme } from '../components/ThemeContext';
 import GlassBackground from '../components/GlassBackground';
 
+import { scheduleRoutineReminder } from '../utils/notifications';
+import { triggerSuccessHaptic } from '../utils/haptics';
+
 export default function NewRoutineScreen() {
   const router = useRouter();
   const { addRoutine } = useRoutineStore();
   const { theme } = useTheme();
 
-  const handleSave = async (routineData: Omit<Routine, 'id' | 'progress' | 'isCompleted'>) => {
+  const handleSave = async (routineData: {
+    name: string;
+    days: number[];
+    goal: number;
+    category: string;
+    color: string;
+    icon: string;
+    reminderTime: string | null;
+  }) => {
     try {
+      const id = Date.now().toString();
+      let notificationId: string | null = null;
+
+      if (routineData.reminderTime) {
+        notificationId = await scheduleRoutineReminder(id, routineData.name, routineData.reminderTime);
+      }
+
       const newRoutine: Routine = {
-        id: Date.now().toString(),
-        ...routineData,
+        id,
+        name: routineData.name,
+        days: routineData.days,
+        goal: routineData.goal,
+        category: routineData.category,
+        color: routineData.color,
+        icon: routineData.icon,
+        reminderTime: routineData.reminderTime,
+        notificationId,
         progress: 0,
         isCompleted: false,
+        streak: 0,
+        bestStreak: 0,
+        lastCompletedDate: null,
+        completedDates: [],
       };
+
       await addRoutine(newRoutine);
+      triggerSuccessHaptic();
       Alert.alert('Sucesso', 'Nova rotina cultivada com sucesso! 🌱');
       router.back();
     } catch (e) {

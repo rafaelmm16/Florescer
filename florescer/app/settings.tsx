@@ -4,14 +4,12 @@ import { Text, Switch } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../components/ThemeContext';
 import Header from '../components/Header';
 import GlassCard from '../components/GlassCard';
 import GlassBackground from '../components/GlassBackground';
-import { LiquidGlassView, isLiquidGlassSupported } from '@callstack/liquid-glass';
 import {
   saveUserProfile,
   fetchProfileFromDatabase,
@@ -44,7 +42,6 @@ export default function SettingsScreen() {
           setImageUri(data.imageUri || null);
         }
 
-        // Try to fetch latest from MongoDB Atlas
         const remote = await fetchProfileFromDatabase();
         if (remote) {
           if (remote.name) setName(remote.name);
@@ -66,10 +63,10 @@ export default function SettingsScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 1,
+      quality: 0.8,
     });
 
-    if (!result.canceled) {
+    if (!result.canceled && result.assets?.[0]) {
       setImageUri(result.assets[0].uri);
     }
   };
@@ -80,293 +77,272 @@ export default function SettingsScreen() {
       const { syncedWithMongo } = await saveUserProfile(profileData);
       setIsEditing(false);
       if (syncedWithMongo) {
-        Alert.alert('Sucesso', 'Seu perfil foi atualizado e sincronizado com o MongoDB Atlas! 🍃');
+        Alert.alert('Sucesso', 'Perfil atualizado e sincronizado com o MongoDB Atlas! 🍃');
       } else {
-        Alert.alert('Sucesso', 'Seu perfil floresceu com as novas mudanças! 🌱');
+        Alert.alert('Sucesso', 'Perfil atualizado com sucesso! 🌱');
       }
     } catch (e) {
       Alert.alert('Erro', 'Não foi possível salvar as alterações.');
     }
   };
 
+  const activeFocusBorder = isDark ? '#38BDF8' : '#0F172A';
+  const buttonBg = isDark ? '#38BDF8' : '#0F172A';
+  const buttonTextColor = isDark ? '#090D14' : '#FFFFFF';
+
   return (
     <GlassBackground>
       <SafeAreaView style={styles.safeArea}>
-      <Header
-        title="Perfil"
-        subtitle="Configurações & Conta"
-        showBack
-        onBack={() => router.back()}
-      />
+        <Header
+          title="Perfil"
+          subtitle="Preferências & Conta"
+          showBack
+          onBack={() => router.back()}
+        />
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Avatar Section */}
-        <View style={styles.avatarSection}>
-          <TouchableOpacity
-            onPress={handlePickImage}
-            disabled={!isEditing}
-            activeOpacity={0.8}
-            style={styles.avatarTouchable}
-          >
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Avatar Section */}
+          <View style={styles.avatarSection}>
+            <TouchableOpacity
+              onPress={handlePickImage}
+              disabled={!isEditing}
+              activeOpacity={0.8}
+              style={styles.avatarTouchable}
+            >
+              <View
+                style={[
+                  styles.avatarRing,
+                  {
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#E2E8F0',
+                    backgroundColor: isDark ? '#111622' : '#F1F5F9',
+                  },
+                ]}
+              >
+                {imageUri ? (
+                  <Image source={{ uri: imageUri }} style={styles.avatarImage} />
+                ) : (
+                  <Ionicons
+                    name="person"
+                    size={40}
+                    color={theme.colors.onSurfaceVariant}
+                  />
+                )}
+
+                {isEditing && (
+                  <View
+                    style={[
+                      styles.cameraBadge,
+                      {
+                        backgroundColor: buttonBg,
+                        borderColor: isDark ? '#111622' : '#FFFFFF',
+                      },
+                    ]}
+                  >
+                    <Ionicons name="camera" size={14} color={buttonTextColor} />
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+
+            <Text style={[styles.userName, { color: theme.colors.onSurface }]}>
+              {name || 'Seu Nome'}
+            </Text>
+            {bio ? (
+              <Text style={[styles.userBio, { color: theme.colors.onSurfaceVariant }]}>
+                {bio}
+              </Text>
+            ) : null}
+
+            {/* MongoDB Atlas Sync Pill */}
             <View
               style={[
-                styles.avatarGlowRing,
+                styles.dbStatusPill,
                 {
-                  borderColor: isDark ? 'rgba(52, 211, 153, 0.45)' : 'rgba(16, 185, 129, 0.4)',
-                  backgroundColor: isDark ? 'rgba(22, 32, 50, 0.75)' : 'rgba(255, 255, 255, 0.82)',
-                  shadowColor: theme.colors.primary,
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#F1F5F9',
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#E2E8F0',
                 },
               ]}
             >
-              {imageUri ? (
-                <Image source={{ uri: imageUri }} style={styles.avatarImage} />
-              ) : (
-                <View
-                  style={[
-                    styles.avatarPlaceholder,
-                    {
-                      backgroundColor: isDark
-                        ? 'rgba(16, 185, 129, 0.18)'
-                        : 'rgba(16, 185, 129, 0.12)',
-                    },
-                  ]}
-                >
-                  <Ionicons name="leaf" size={54} color={theme.colors.primary} />
-                </View>
-              )}
-
-              {isEditing && (
-                <View
-                  style={[
-                    styles.cameraBadge,
-                    {
-                      backgroundColor: theme.colors.primary,
-                      borderColor: '#FFFFFF',
-                    },
-                  ]}
-                >
-                  <Ionicons name="camera" size={18} color="#FFFFFF" />
-                </View>
-              )}
-            </View>
-          </TouchableOpacity>
-
-          <Text style={[styles.userName, { color: theme.colors.onSurface }]}>
-            {name || 'Seu Nome'}
-          </Text>
-          {bio ? (
-            <Text style={[styles.userBio, { color: theme.colors.onSurfaceVariant }]}>
-              {bio}
-            </Text>
-          ) : null}
-
-          {/* MongoDB Atlas Sync Pill */}
-          <LiquidGlassView
-            effect="clear"
-            colorScheme={isDark ? 'dark' : 'light'}
-            tintColor={isDark ? 'rgba(0, 242, 254, 0.12)' : 'rgba(6, 182, 212, 0.10)'}
-            style={[
-              styles.dbStatusPill,
-              {
-                borderColor: dbStatus.connected
-                  ? 'rgba(0, 242, 254, 0.35)'
-                  : 'rgba(245, 158, 11, 0.35)',
-              },
-              !isLiquidGlassSupported && {
-                backgroundColor: isDark
-                  ? 'rgba(10, 29, 46, 0.78)'
-                  : 'rgba(255, 255, 255, 0.82)',
-              },
-            ]}
-          >
-            <View
-              style={[
-                styles.dbStatusDot,
-                { backgroundColor: dbStatus.connected ? '#00F2FE' : '#F59E0B' },
-              ]}
-            />
-            <Text style={[styles.dbStatusText, { color: theme.colors.onSurfaceVariant }]}>
-              {dbStatus.connected
-                ? 'Sincronizado com MongoDB Atlas 🍃'
-                : 'Armazenamento Local Ativo'}
-            </Text>
-          </LiquidGlassView>
-        </View>
-
-        {/* Dark Mode Card */}
-        <GlassCard borderRadius={20} style={styles.card}>
-          <View style={styles.cardPadding}>
-            <View style={styles.optionRow}>
-              <View style={styles.optionLeft}>
-                <View
-                  style={[
-                    styles.optionIconBox,
-                    {
-                      backgroundColor: isDark
-                        ? 'rgba(167, 139, 250, 0.22)'
-                        : 'rgba(139, 92, 246, 0.14)',
-                      borderColor: isDark
-                        ? 'rgba(167, 139, 250, 0.35)'
-                        : 'rgba(139, 92, 246, 0.25)',
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    name={isDark ? 'moon' : 'sunny'}
-                    size={22}
-                    color={isDark ? '#C4B5FD' : '#7C3AED'}
-                  />
-                </View>
-                <View>
-                  <Text style={[styles.optionTitle, { color: theme.colors.onSurface }]}>
-                    Modo Escuro
-                  </Text>
-                  <Text style={[styles.optionSubtitle, { color: theme.colors.onSurfaceVariant }]}>
-                    {isDark ? 'Tema Escuro Ativado' : 'Tema Claro Ativado'}
-                  </Text>
-                </View>
-              </View>
-
-              <Switch
-                value={isDark}
-                onValueChange={toggleTheme}
-                color={theme.colors.primary}
+              <View
+                style={[
+                  styles.dbStatusDot,
+                  { backgroundColor: dbStatus.connected ? '#10B981' : '#F59E0B' },
+                ]}
               />
-            </View>
-          </View>
-        </GlassCard>
-
-        {/* Personal Information Card */}
-        <GlassCard borderRadius={20} style={styles.card}>
-          <View style={styles.cardPadding}>
-            <View style={styles.sectionHeaderRow}>
-              <Ionicons name="person-outline" size={18} color={theme.colors.primary} style={{ marginRight: 6 }} />
-              <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>
-                Informações Pessoais
+              <Text style={[styles.dbStatusText, { color: theme.colors.onSurfaceVariant }]}>
+                {dbStatus.connected
+                  ? 'Sincronizado com MongoDB Atlas'
+                  : 'Armazenamento Local'}
               </Text>
             </View>
-
-            {/* Name Input */}
-            <Text style={[styles.inputLabel, { color: theme.colors.onSurfaceVariant }]}>Nome</Text>
-            <View
-              style={[
-                styles.glassInputBox,
-                {
-                  backgroundColor: isDark ? 'rgba(10, 16, 28, 0.65)' : 'rgba(255, 255, 255, 0.72)',
-                  borderColor: isEditing ? theme.colors.primary : isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(226, 232, 240, 0.85)',
-                },
-              ]}
-            >
-              <TextInput
-                value={name}
-                onChangeText={setName}
-                editable={isEditing}
-                placeholder="Seu nome completo"
-                placeholderTextColor={theme.colors.placeholder}
-                style={[styles.inputField, { color: theme.colors.onSurface }]}
-              />
-            </View>
-
-            {/* Email Input */}
-            <Text style={[styles.inputLabel, { color: theme.colors.onSurfaceVariant, marginTop: 14 }]}>
-              E-mail
-            </Text>
-            <View
-              style={[
-                styles.glassInputBox,
-                {
-                  backgroundColor: isDark ? 'rgba(10, 16, 28, 0.65)' : 'rgba(255, 255, 255, 0.72)',
-                  borderColor: isEditing ? theme.colors.primary : isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(226, 232, 240, 0.85)',
-                },
-              ]}
-            >
-              <TextInput
-                value={email}
-                onChangeText={setEmail}
-                editable={isEditing}
-                placeholder="seuemail@exemplo.com"
-                placeholderTextColor={theme.colors.placeholder}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                style={[styles.inputField, { color: theme.colors.onSurface }]}
-              />
-            </View>
-
-            {/* Bio Input */}
-            <Text style={[styles.inputLabel, { color: theme.colors.onSurfaceVariant, marginTop: 14 }]}>
-              Bio / Lembrete Inspirador
-            </Text>
-            <View
-              style={[
-                styles.glassInputBox,
-                styles.bioInputBox,
-                {
-                  backgroundColor: isDark ? 'rgba(10, 16, 28, 0.65)' : 'rgba(255, 255, 255, 0.72)',
-                  borderColor: isEditing ? theme.colors.primary : isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(226, 232, 240, 0.85)',
-                },
-              ]}
-            >
-              <TextInput
-                value={bio}
-                onChangeText={setBio}
-                editable={isEditing}
-                placeholder="Uma frase para cultivar sua melhor versão..."
-                placeholderTextColor={theme.colors.placeholder}
-                multiline
-                numberOfLines={3}
-                style={[styles.inputField, styles.bioInputField, { color: theme.colors.onSurface }]}
-              />
-            </View>
           </View>
-        </GlassCard>
 
-        {/* Action Button */}
-        <TouchableOpacity
-          style={styles.actionBtnContainer}
-          onPress={isEditing ? handleSaveChanges : () => setIsEditing(true)}
-          activeOpacity={0.88}
-        >
-          <LinearGradient
-            colors={['#00F2FE', '#06B6D4', '#0891B2']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.actionBtnGradient}
+          {/* Dark Mode Card */}
+          <GlassCard borderRadius={18} style={styles.card}>
+            <View style={styles.cardPadding}>
+              <View style={styles.optionRow}>
+                <View style={styles.optionLeft}>
+                  <View
+                    style={[
+                      styles.optionIconBox,
+                      {
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F8FAFC',
+                        borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#E2E8F0',
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={isDark ? 'moon-outline' : 'sunny-outline'}
+                      size={20}
+                      color={theme.colors.onSurface}
+                    />
+                  </View>
+                  <View>
+                    <Text style={[styles.optionTitle, { color: theme.colors.onSurface }]}>
+                      Modo Escuro
+                    </Text>
+                    <Text style={[styles.optionSubtitle, { color: theme.colors.onSurfaceVariant }]}>
+                      {isDark ? 'Tema Escuro Ativado' : 'Tema Claro Ativado'}
+                    </Text>
+                  </View>
+                </View>
+
+                <Switch
+                  value={isDark}
+                  onValueChange={toggleTheme}
+                  color={activeFocusBorder}
+                />
+              </View>
+            </View>
+          </GlassCard>
+
+          {/* Personal Information Card */}
+          <GlassCard borderRadius={18} style={styles.card}>
+            <View style={styles.cardPadding}>
+              <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>
+                Informações Pessoais
+              </Text>
+
+              {/* Name Input */}
+              <Text style={[styles.inputLabel, { color: theme.colors.onSurfaceVariant }]}>Nome</Text>
+              <View
+                style={[
+                  styles.inputBox,
+                  {
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#F8FAFC',
+                    borderColor: isEditing
+                      ? activeFocusBorder
+                      : isDark
+                      ? 'rgba(255, 255, 255, 0.08)'
+                      : '#E2E8F0',
+                  },
+                ]}
+              >
+                <TextInput
+                  value={name}
+                  onChangeText={setName}
+                  editable={isEditing}
+                  placeholder="Seu nome completo"
+                  placeholderTextColor={theme.colors.placeholder}
+                  style={[styles.inputField, { color: theme.colors.onSurface }]}
+                />
+              </View>
+
+              {/* Email Input */}
+              <Text style={[styles.inputLabel, { color: theme.colors.onSurfaceVariant, marginTop: 14 }]}>
+                E-mail
+              </Text>
+              <View
+                style={[
+                  styles.inputBox,
+                  {
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#F8FAFC',
+                    borderColor: isEditing
+                      ? activeFocusBorder
+                      : isDark
+                      ? 'rgba(255, 255, 255, 0.08)'
+                      : '#E2E8F0',
+                  },
+                ]}
+              >
+                <TextInput
+                  value={email}
+                  onChangeText={setEmail}
+                  editable={isEditing}
+                  placeholder="seuemail@exemplo.com"
+                  placeholderTextColor={theme.colors.placeholder}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  style={[styles.inputField, { color: theme.colors.onSurface }]}
+                />
+              </View>
+
+              {/* Bio Input */}
+              <Text style={[styles.inputLabel, { color: theme.colors.onSurfaceVariant, marginTop: 14 }]}>
+                Bio / Frase de Foco
+              </Text>
+              <View
+                style={[
+                  styles.inputBox,
+                  styles.bioInputBox,
+                  {
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#F8FAFC',
+                    borderColor: isEditing
+                      ? activeFocusBorder
+                      : isDark
+                      ? 'rgba(255, 255, 255, 0.08)'
+                      : '#E2E8F0',
+                  },
+                ]}
+              >
+                <TextInput
+                  value={bio}
+                  onChangeText={setBio}
+                  editable={isEditing}
+                  placeholder="Uma frase para inspirar sua constância..."
+                  placeholderTextColor={theme.colors.placeholder}
+                  multiline
+                  numberOfLines={2}
+                  style={[styles.inputField, styles.bioInputField, { color: theme.colors.onSurface }]}
+                />
+              </View>
+            </View>
+          </GlassCard>
+
+          {/* Action Button */}
+          <TouchableOpacity
+            style={[
+              styles.actionBtn,
+              { backgroundColor: buttonBg },
+            ]}
+            onPress={isEditing ? handleSaveChanges : () => setIsEditing(true)}
+            activeOpacity={0.85}
           >
-            {/* Liquid specular highlight */}
-            <LinearGradient
-              colors={['rgba(255, 255, 255, 0.45)', 'rgba(255, 255, 255, 0.1)', 'transparent']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 0.8 }}
-              style={styles.btnShine}
-              pointerEvents="none"
-            />
             <Ionicons
-              name={isEditing ? 'checkmark-circle-outline' : 'pencil-outline'}
-              size={20}
-              color="#FFFFFF"
+              name={isEditing ? 'checkmark' : 'pencil'}
+              size={18}
+              color={buttonTextColor}
               style={{ marginRight: 8 }}
             />
-            <Text style={styles.actionBtnText}>
+            <Text style={[styles.actionBtnText, { color: buttonTextColor }]}>
               {isEditing ? 'Salvar Alterações' : 'Editar Perfil'}
             </Text>
-          </LinearGradient>
-        </TouchableOpacity>
+          </TouchableOpacity>
 
-        {/* Re-open Setup Profile Screen */}
-        <TouchableOpacity
-          onPress={() => router.push('/setup-profile')}
-          activeOpacity={0.8}
-          style={styles.reopenSetupBtn}
-        >
-          <Ionicons name="sparkles-outline" size={15} color={theme.colors.primary} style={{ marginRight: 6 }} />
-          <Text style={[styles.reopenSetupText, { color: theme.colors.primary }]}>
-            Ver Tela de Configuração Inicial 🌱
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
-  </GlassBackground>
-);
+          {/* Re-open Setup Profile Screen */}
+          <TouchableOpacity
+            onPress={() => router.push('/setup-profile')}
+            activeOpacity={0.7}
+            style={styles.reopenSetupBtn}
+          >
+            <Text style={[styles.reopenSetupText, { color: theme.colors.onSurfaceVariant }]}>
+              Recalibrar Perfil Inicial 🌱
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
+    </GlassBackground>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -375,69 +351,57 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 20,
-    paddingTop: 8,
+    paddingTop: 4,
     paddingBottom: 110,
   },
   avatarSection: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   avatarTouchable: {
     position: 'relative',
   },
-  avatarGlowRing: {
-    width: 124,
-    height: 124,
-    borderRadius: 62,
-    borderWidth: 2,
+  avatarRing: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 8,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
   },
   avatarImage: {
-    width: 116,
-    height: 116,
-    borderRadius: 58,
-  },
-  avatarPlaceholder: {
-    width: 116,
-    height: 116,
-    borderRadius: 58,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 86,
+    height: 86,
+    borderRadius: 43,
   },
   cameraBadge: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    bottom: -2,
+    right: -2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 4,
   },
   userName: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '800',
-    marginTop: 14,
-    letterSpacing: -0.3,
+    marginTop: 12,
+    letterSpacing: -0.2,
   },
   userBio: {
-    fontSize: 14,
-    marginTop: 4,
+    fontSize: 13,
+    marginTop: 3,
     textAlign: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
   },
   card: {
-    marginBottom: 18,
+    marginBottom: 14,
   },
   cardPadding: {
-    padding: 20,
+    padding: 18,
   },
   optionRow: {
     flexDirection: 'row',
@@ -449,53 +413,48 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   optionIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 14,
+    marginRight: 12,
   },
   optionTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
   },
   optionSubtitle: {
-    fontSize: 13,
-    marginTop: 2,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
+    fontSize: 12,
+    marginTop: 1,
   },
   sectionTitle: {
-    fontSize: 13,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  inputLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.6,
+    marginBottom: 14,
+  },
+  inputLabel: {
+    fontSize: 12,
+    fontWeight: '600',
     marginBottom: 6,
   },
-  glassInputBox: {
-    borderRadius: 14,
-    borderWidth: 1.2,
-    paddingHorizontal: 14,
-    height: 50,
+  inputBox: {
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    height: 46,
     justifyContent: 'center',
   },
   bioInputBox: {
-    height: 80,
-    paddingVertical: 10,
+    height: 72,
+    paddingVertical: 8,
     alignItems: 'flex-start',
   },
   inputField: {
-    fontSize: 15,
+    fontSize: 14,
     width: '100%',
     ...Platform.select({
       web: { outlineStyle: 'none' } as any,
@@ -505,52 +464,33 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     height: '100%',
   },
-  actionBtnContainer: {
-    marginTop: 6,
-    borderRadius: 20,
-    elevation: 8,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-  },
-  actionBtnGradient: {
+  actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 18,
-    borderRadius: 20,
-    borderWidth: 1.2,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  btnShine: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 18,
+    borderRadius: 14,
+    paddingVertical: 15,
+    marginTop: 4,
   },
   actionBtnText: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '800',
-    letterSpacing: 0.2,
+    fontSize: 15,
+    fontWeight: '700',
   },
   dbStatusPill: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
     borderWidth: 1,
-    marginTop: 12,
+    marginTop: 10,
     gap: 6,
   },
   dbStatusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   dbStatusText: {
     fontSize: 11,
@@ -560,11 +500,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 16,
-    paddingVertical: 12,
+    marginTop: 14,
+    paddingVertical: 8,
   },
   reopenSetupText: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

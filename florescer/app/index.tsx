@@ -3,7 +3,6 @@ import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import { Routine } from '../types/routine';
 import { useRoutineStore } from '../store/useRoutineStore';
@@ -13,7 +12,6 @@ import { useTheme } from '../components/ThemeContext';
 import NewRoutineButton from '../components/NewRoutineButton';
 import GlassCard from '../components/GlassCard';
 import GlassBackground from '../components/GlassBackground';
-import { LiquidGlassView, isLiquidGlassSupported } from '@callstack/liquid-glass';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -81,179 +79,231 @@ export default function HomeScreen() {
   }).format(new Date());
 
   const formattedDate = today.charAt(0).toUpperCase() + today.slice(1);
+  const maxStreak = Math.max(0, ...routines.map((r) => r.streak || 0));
+  const progressPercent =
+    routines.length > 0 ? Math.round((completedCount / routines.length) * 100) : 0;
 
   return (
     <GlassBackground>
       <SafeAreaView style={styles.safeArea}>
-      <Header
-        title="Minhas Rotinas"
-        subtitle={formattedDate}
-        right={
-          <LiquidGlassView
-            effect="clear"
-            colorScheme={isDark ? 'dark' : 'light'}
-            tintColor={isDark ? 'rgba(0, 242, 254, 0.16)' : 'rgba(6, 182, 212, 0.12)'}
-            style={[
-              styles.statBadge,
-              {
-                borderColor: isDark
-                  ? 'rgba(0, 242, 254, 0.35)'
-                  : 'rgba(6, 182, 212, 0.25)',
-              },
-              !isLiquidGlassSupported && {
-                backgroundColor: isDark
-                  ? 'rgba(0, 242, 254, 0.14)'
-                  : 'rgba(6, 182, 212, 0.10)',
-              },
-            ]}
-          >
-            <Ionicons name="sparkles" size={13} color={theme.colors.primary} />
-            <Text style={[styles.statBadgeText, { color: theme.colors.primary }]}>
-              {activeRoutines.length} ativas
-            </Text>
-          </LiquidGlassView>
-        }
-      />
-
-      {/* Daily Progress Banner if there are routines (Layered Composition with Depth) */}
-      {routines.length > 0 && (
-        <View style={styles.statsBannerWrapper}>
-          <GlassCard borderRadius={22} layered={true} style={styles.statsCard}>
-            <View>
-              <View style={styles.statsRow}>
-                <View style={styles.statsItem}>
-                  <Text style={[styles.statsNumber, { color: theme.colors.primary }]}>
-                    {activeRoutines.length}
-                  </Text>
-                  <Text style={[styles.statsLabel, { color: theme.colors.onSurfaceVariant }]}>
-                    Pendentes
-                  </Text>
-                </View>
-
+        <Header
+          title="Meus Hábitos"
+          subtitle={formattedDate}
+          right={
+            <View style={styles.headerBadgesRow}>
+              {maxStreak > 0 && (
                 <View
                   style={[
-                    styles.statsDivider,
-                    { backgroundColor: isDark ? 'rgba(0, 242, 254, 0.15)' : 'rgba(6, 182, 212, 0.15)' },
-                  ]}
-                />
-
-                <View style={styles.statsItem}>
-                  <Text style={[styles.statsNumber, { color: theme.colors.secondary }]}>
-                    {completedCount}
-                  </Text>
-                  <Text style={[styles.statsLabel, { color: theme.colors.onSurfaceVariant }]}>
-                    Concluídas
-                  </Text>
-                </View>
-
-                <View
-                  style={[
-                    styles.statsDivider,
-                    { backgroundColor: isDark ? 'rgba(0, 242, 254, 0.15)' : 'rgba(6, 182, 212, 0.15)' },
-                  ]}
-                />
-
-                <View style={styles.statsItem}>
-                  <Text style={[styles.statsNumber, { color: theme.colors.primary }]}>
-                    {routines.length > 0
-                      ? `${Math.round((completedCount / routines.length) * 100)}%`
-                      : '0%'}
-                  </Text>
-                  <Text style={[styles.statsLabel, { color: theme.colors.onSurfaceVariant }]}>
-                    Progresso
-                  </Text>
-                </View>
-              </View>
-
-              {/* Luminous Mini Sparkline Bar */}
-              <View
-                style={[
-                  styles.sparklineTrack,
-                  { backgroundColor: isDark ? 'rgba(0, 242, 254, 0.10)' : 'rgba(6, 182, 212, 0.10)' },
-                ]}
-              >
-                <View
-                  style={[
-                    styles.sparklineFill,
+                    styles.streakBadge,
                     {
-                      width: `${routines.length > 0 ? (completedCount / routines.length) * 100 : 0}%`,
+                      backgroundColor: isDark ? 'rgba(249, 115, 22, 0.12)' : '#FFF7ED',
+                      borderColor: isDark ? 'rgba(249, 115, 22, 0.25)' : '#FFEDD5',
                     },
                   ]}
                 >
-                  <LinearGradient
-                    colors={['#00F2FE', '#06B6D4', '#2DD4BF']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={StyleSheet.absoluteFill}
+                  <Text style={styles.streakBadgeText}>🔥 {maxStreak}d</Text>
+                </View>
+              )}
+
+              <View
+                style={[
+                  styles.countBadge,
+                  {
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F1F5F9',
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#E2E8F0',
+                  },
+                ]}
+              >
+                <Text style={[styles.countBadgeText, { color: theme.colors.onSurfaceVariant }]}>
+                  {activeRoutines.length} ativas
+                </Text>
+              </View>
+            </View>
+          }
+        />
+
+        {/* Minimalist Overview Stats Banner */}
+        {routines.length > 0 && (
+          <View style={styles.statsWrapper}>
+            <GlassCard borderRadius={18} style={styles.statsCard}>
+              <View style={styles.statsContent}>
+                <View style={styles.statsGrid}>
+                  <View style={styles.statCol}>
+                    <Text style={[styles.statNum, { color: theme.colors.onSurface }]}>
+                      {activeRoutines.length}
+                    </Text>
+                    <Text style={[styles.statText, { color: theme.colors.onSurfaceVariant }]}>
+                      Pendentes
+                    </Text>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.statDivider,
+                      { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#F1F5F9' },
+                    ]}
+                  />
+
+                  <View style={styles.statCol}>
+                    <Text style={[styles.statNum, { color: isDark ? '#34D399' : '#059669' }]}>
+                      {completedCount}
+                    </Text>
+                    <Text style={[styles.statText, { color: theme.colors.onSurfaceVariant }]}>
+                      Feitas
+                    </Text>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.statDivider,
+                      { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#F1F5F9' },
+                    ]}
+                  />
+
+                  <View style={styles.statCol}>
+                    <Text style={[styles.statNum, { color: theme.colors.onSurface }]}>
+                      {progressPercent}%
+                    </Text>
+                    <Text style={[styles.statText, { color: theme.colors.onSurfaceVariant }]}>
+                      Progresso
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Minimalist 3px Progress Line */}
+                <View
+                  style={[
+                    styles.progressTrack,
+                    { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#F1F5F9' },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.progressFill,
+                      {
+                        width: `${progressPercent}%`,
+                        backgroundColor: isDark ? '#38BDF8' : '#0F172A',
+                      },
+                    ]}
                   />
                 </View>
               </View>
-            </View>
-          </GlassCard>
-        </View>
-      )}
-
-      <DraggableFlatList
-        data={activeRoutines}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        onDragEnd={handleDragEnd}
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <GlassCard borderRadius={28} style={styles.emptyCard}>
-              <View style={styles.emptyCardContent}>
-                <View
-                  style={[
-                    styles.emptyIconCircle,
-                    {
-                      backgroundColor: isDark
-                        ? 'rgba(0, 242, 254, 0.15)'
-                        : 'rgba(6, 182, 212, 0.12)',
-                      borderColor: theme.colors.primary,
-                    },
-                  ]}
-                >
-                  <Ionicons name="leaf" size={42} color={theme.colors.primary} />
-                </View>
-
-                <Text style={[styles.emptyTitle, { color: theme.colors.onSurface }]}>
-                  Tudo florescendo!
-                </Text>
-                <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>
-                  Nenhuma rotina pendente para agora. Cultive seus hábitos diários adicionando uma nova rotina.
-                </Text>
-
-                <TouchableOpacity
-                  onPress={() => router.push('/new')}
-                  activeOpacity={0.88}
-                  style={styles.emptyButtonWrapper}
-                >
-                  <LinearGradient
-                    colors={
-                      isDark
-                        ? ['#00F2FE', '#06B6D4', '#0891B2']
-                        : ['#22D3EE', '#06B6D4', '#0891B2']
-                    }
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.emptyButton}
-                  >
-                    <Ionicons name="add" size={20} color="#FFFFFF" style={{ marginRight: 6 }} />
-                    <Text style={styles.emptyButtonText}>Criar Nova Rotina</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
             </GlassCard>
           </View>
-        }
-      />
+        )}
 
-      <NewRoutineButton />
-    </SafeAreaView>
-  </GlassBackground>
-);
+        <DraggableFlatList
+          data={activeRoutines}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          onDragEnd={handleDragEnd}
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <GlassCard borderRadius={20} style={styles.emptyCard}>
+                <View style={styles.emptyCardContent}>
+                  {routines.length > 0 ? (
+                    <>
+                      <View
+                        style={[
+                          styles.emptyIconBox,
+                          {
+                            backgroundColor: isDark ? 'rgba(52, 211, 153, 0.12)' : '#ECFDF5',
+                            borderColor: isDark ? 'rgba(52, 211, 153, 0.25)' : '#A7F3D0',
+                          },
+                        ]}
+                      >
+                        <Ionicons
+                          name="checkmark"
+                          size={28}
+                          color={isDark ? '#34D399' : '#059669'}
+                        />
+                      </View>
+
+                      <Text style={[styles.emptyTitle, { color: theme.colors.onSurface }]}>
+                        Tudo pronto por hoje!
+                      </Text>
+                      <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>
+                        Todos os seus hábitos de hoje foram concluídos. Continue consistente amanhã!
+                      </Text>
+
+                      <TouchableOpacity
+                        onPress={() => router.push('/completed')}
+                        activeOpacity={0.8}
+                        style={[
+                          styles.emptyButton,
+                          {
+                            backgroundColor: isDark ? '#34D399' : '#0F172A',
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.emptyButtonText,
+                            { color: isDark ? '#090D14' : '#FFFFFF' },
+                          ]}
+                        >
+                          Ver Histórico
+                        </Text>
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    <>
+                      <View
+                        style={[
+                          styles.emptyIconBox,
+                          {
+                            backgroundColor: isDark ? 'rgba(56, 189, 248, 0.12)' : '#F0F9FF',
+                            borderColor: isDark ? 'rgba(56, 189, 248, 0.25)' : '#BAE6FD',
+                          },
+                        ]}
+                      >
+                        <Ionicons
+                          name="leaf-outline"
+                          size={28}
+                          color={isDark ? '#38BDF8' : '#0284C7'}
+                        />
+                      </View>
+
+                      <Text style={[styles.emptyTitle, { color: theme.colors.onSurface }]}>
+                        Nenhum hábito ainda
+                      </Text>
+                      <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>
+                        Crie seu primeiro hábito para começar a transformar sua rotina.
+                      </Text>
+
+                      <TouchableOpacity
+                        onPress={() => router.push('/new')}
+                        activeOpacity={0.8}
+                        style={[
+                          styles.emptyButton,
+                          {
+                            backgroundColor: isDark ? '#38BDF8' : '#0F172A',
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.emptyButtonText,
+                            { color: isDark ? '#090D14' : '#FFFFFF' },
+                          ]}
+                        >
+                          + Criar Hábito
+                        </Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
+              </GlassCard>
+            </View>
+          }
+        />
+
+        <NewRoutineButton />
+      </SafeAreaView>
+    </GlassBackground>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -263,68 +313,81 @@ const styles = StyleSheet.create({
   list: {
     paddingHorizontal: 20,
     paddingTop: 4,
-    paddingBottom: 130, // Space for floating glass navbar and FAB
+    paddingBottom: 130,
   },
-  statBadge: {
+  headerBadgesRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    gap: 6,
+    gap: 8,
   },
-  statBadgeText: {
+  streakBadge: {
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  streakBadgeText: {
     fontSize: 12,
     fontWeight: '700',
+    color: '#EA580C',
   },
-  statsBannerWrapper: {
+  countBadge: {
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  countBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  statsWrapper: {
     paddingHorizontal: 20,
     marginBottom: 10,
   },
   statsCard: {
     width: '100%',
   },
-  statsRow: {
+  statsContent: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  statsGrid: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
+    marginBottom: 12,
   },
-  statsItem: {
+  statCol: {
     alignItems: 'center',
     flex: 1,
   },
-  statsNumber: {
-    fontSize: 20,
+  statNum: {
+    fontSize: 18,
     fontWeight: '800',
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
+    marginBottom: 2,
   },
-  statsLabel: {
+  statText: {
     fontSize: 11,
-    fontWeight: '700',
-    marginTop: 2,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    fontWeight: '500',
   },
-  statsDivider: {
+  statDivider: {
     width: 1,
-    height: 28,
+    height: 24,
   },
-  sparklineTrack: {
-    height: 4,
-    borderRadius: 2,
+  progressTrack: {
+    height: 3,
+    borderRadius: 1.5,
+    width: '100%',
     overflow: 'hidden',
-    marginHorizontal: 16,
-    marginBottom: 8,
   },
-  sparklineFill: {
+  progressFill: {
     height: '100%',
-    borderRadius: 2,
+    borderRadius: 1.5,
   },
   emptyContainer: {
-    marginTop: 40,
+    marginTop: 24,
     alignItems: 'center',
   },
   emptyCard: {
@@ -332,48 +395,40 @@ const styles = StyleSheet.create({
   },
   emptyCardContent: {
     alignItems: 'center',
-    padding: 32,
+    paddingVertical: 36,
+    paddingHorizontal: 24,
   },
-  emptyIconCircle: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    borderWidth: 1.5,
-    justifyContent: 'center',
+  emptyIconBox: {
+    width: 60,
+    height: 60,
+    borderRadius: 20,
+    borderWidth: 1,
     alignItems: 'center',
-    marginBottom: 20,
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   emptyTitle: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '800',
     letterSpacing: -0.3,
-    marginBottom: 10,
+    marginBottom: 6,
     textAlign: 'center',
   },
   emptyText: {
-    fontSize: 15,
+    fontSize: 14,
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 26,
-    paddingHorizontal: 10,
-  },
-  emptyButtonWrapper: {
-    borderRadius: 18,
-    elevation: 6,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
+    lineHeight: 20,
+    marginBottom: 20,
   },
   emptyButton: {
-    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 18,
+    justifyContent: 'center',
   },
   emptyButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '800',
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

@@ -27,17 +27,46 @@ export default function EditRoutineScreen() {
     }
   }, [id, routines]);
 
-  const handleSave = async (routineData: Omit<Routine, 'id' | 'progress' | 'isCompleted'>) => {
+  const handleSave = async (routineData: {
+    name: string;
+    days: number[];
+    goal: number;
+    category: string;
+    color: string;
+    icon: string;
+    reminderTime: string | null;
+  }) => {
     if (routine) {
       if (routine.isCompleted) {
         Alert.alert('Atenção', 'Não é possível editar uma rotina já concluída.');
         return;
       }
-      const updatedRoutine = {
+
+      let notificationId = routine.notificationId;
+
+      // If reminder changed, reschedule
+      if (routine.reminderTime !== routineData.reminderTime) {
+        if (notificationId) {
+          const { cancelRoutineReminder } = require('../../utils/notifications');
+          await cancelRoutineReminder(notificationId);
+          notificationId = null;
+        }
+
+        if (routineData.reminderTime) {
+          const { scheduleRoutineReminder } = require('../../utils/notifications');
+          notificationId = await scheduleRoutineReminder(routine.id, routineData.name, routineData.reminderTime);
+        }
+      }
+
+      const updatedRoutine: Routine = {
         ...routine,
         ...routineData,
+        notificationId,
       };
+
       await updateRoutine(updatedRoutine);
+      const { triggerSuccessHaptic } = require('../../utils/haptics');
+      triggerSuccessHaptic();
       Alert.alert('Sucesso', 'Rotina atualizada com sucesso! ✨');
       router.back();
     }

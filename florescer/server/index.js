@@ -85,11 +85,20 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+function getUserId(req) {
+  const customId = req.headers['x-user-id'] || req.query.userId;
+  if (customId && typeof customId === 'string' && customId.trim() !== '') {
+    return customId.trim();
+  }
+  return 'current_user';
+}
+
 // GET Profile
 app.get('/api/profile', async (req, res) => {
   try {
+    const userId = getUserId(req);
     const db = await getDatabase();
-    const profile = await db.collection('profiles').findOne({ _id: 'current_user' });
+    const profile = await db.collection('profiles').findOne({ _id: userId });
     if (!profile) {
       return res.json({ profile: null, isConfigured: false });
     }
@@ -113,6 +122,7 @@ app.get('/api/profile', async (req, res) => {
 // POST Profile (Save/Update)
 app.post('/api/profile', async (req, res) => {
   try {
+    const userId = getUserId(req);
     const { name, email, bio, imageUri } = req.body;
     if (!name || name.trim() === '') {
       return res.status(400).json({ error: 'O nome é obrigatório.' });
@@ -129,12 +139,12 @@ app.post('/api/profile', async (req, res) => {
     };
 
     await db.collection('profiles').updateOne(
-      { _id: 'current_user' },
+      { _id: userId },
       { $set: updateDoc },
       { upsert: true }
     );
 
-    console.log(`[MongoDB Atlas] Perfil de "${updateDoc.name}" salvo com sucesso.`);
+    console.log(`[MongoDB Atlas] Perfil [${userId}] de "${updateDoc.name}" salvo com sucesso.`);
     res.json({ success: true, profile: updateDoc });
   } catch (error) {
     console.error('[POST /api/profile Error]:', error.message);
@@ -145,8 +155,9 @@ app.post('/api/profile', async (req, res) => {
 // GET Routines
 app.get('/api/routines', async (req, res) => {
   try {
+    const userId = getUserId(req);
     const db = await getDatabase();
-    const doc = await db.collection('routines').findOne({ _id: 'current_user_routines' });
+    const doc = await db.collection('routines').findOne({ _id: `${userId}_routines` });
     res.json({ routines: doc?.routines || [] });
   } catch (error) {
     console.error('[GET /api/routines Error]:', error.message);
@@ -157,6 +168,7 @@ app.get('/api/routines', async (req, res) => {
 // POST Routines (Sync all)
 app.post('/api/routines', async (req, res) => {
   try {
+    const userId = getUserId(req);
     const { routines } = req.body;
     if (!Array.isArray(routines)) {
       return res.status(400).json({ error: 'Routines deve ser um array.' });
@@ -164,7 +176,7 @@ app.post('/api/routines', async (req, res) => {
 
     const db = await getDatabase();
     await db.collection('routines').updateOne(
-      { _id: 'current_user_routines' },
+      { _id: `${userId}_routines` },
       { $set: { routines, updatedAt: new Date() } },
       { upsert: true }
     );
@@ -178,5 +190,7 @@ app.post('/api/routines', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 Florescer Backend API rodando na porta ${PORT}`);
-  console.log(`📡 MongoDB Atlas conectando em: ${mongoUri.replace(/:[^:]*@/, ':****@')}`);
+  const safeUri = mongoUri ? mongoUri.replace(/:[^:]*@/, ':****@') : 'Não configurado (modo local)';
+  console.log(`📡 MongoDB Atlas: ${safeUri}`);
 });
+
