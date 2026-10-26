@@ -1,20 +1,33 @@
 {
   "expo": {
-    "name": "contador-de-habitos",
-    "slug": "contador-de-habitos",
+    "name": "Florescer",
+    "slug": "florescer",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "florescer",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.rafaelmerlo.florescer",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "O Florescer utiliza biometria para proteger suas rotinas e privacidade.",
+        "NSPhotoLibraryUsageDescription": "O Florescer precisa de acesso às suas fotos para personalizar seu avatar de perfil."
+      }
     },
     "android": {
+      "package": "com.rafaelmerlo.florescer",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT",
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -30,6 +43,25 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "O Florescer utiliza biometria para proteger suas rotinas e privacidade."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#10B981"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O Florescer precisa de acesso às suas fotos para personalizar seu avatar de perfil."
         }
       ]
     ],

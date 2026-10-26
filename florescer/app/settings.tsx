@@ -199,8 +199,6 @@ export default function SettingsScreen() {
         <Header
           title="Perfil"
           subtitle="Preferências & Conta"
-          showBack
-          onBack={() => router.back()}
         />
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
